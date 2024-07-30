@@ -198,16 +198,7 @@ ORDER BY
     movies.title;
 
 
-SELECT
-    genres.name AS genre_name,
-    directors.name AS director_name
-FROM
-    genres
-CROSS JOIN directors
 
-ORDER BY
-    genres.genre_id,
-    directors.director_id;
 
 
 SELECT
