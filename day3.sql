@@ -428,6 +428,6 @@ SELECT
 FROM
     ranked_movies
 WHERE
-    total_movies > 1 -- Adjust the condition as needed
+    total_movies > 1 
 ORDER BY
     max_cnt DESC;
