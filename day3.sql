@@ -311,25 +311,28 @@ ORDER BY
 SELECT
     d.director_id,
     d.name AS director_name,
-    m.movie_id,
-    ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.movie_id) AS cnt_movies
+    m.title,
+    m.budget,
+    ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.title) AS cnt_movies
 FROM
     directors d
-JOIN
+JOIN    
     movie_directors md ON d.director_id = md.director_id
 JOIN
     movies m ON md.movie_id = m.movie_id;
 
+
+
     
 
 --b: Rewrite the previous query using the WITH clause.
-
 WITH director_movies AS (
     SELECT
         d.director_id,
         d.name AS director_name,
-        m.movie_id,
-        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.movie_id) AS cnt_movies
+        m.title,
+        m.budget,
+        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.title) AS cnt_movies
     FROM
         directors d
     JOIN
@@ -340,20 +343,23 @@ WITH director_movies AS (
 SELECT
     director_id,
     director_name,
-    movie_id,
+    title,
+    budget,
     cnt_movies
 FROM
     director_movies;
 
 
---c: Calculate the maximum and minimum count of movies per director in the ranked_movies CTE. Note: also use WITH clause.
 
+
+--c: Calculate the maximum and minimum count of movies per director in the ranked_movies CTE. Note: also use WITH clause.
 WITH director_movies AS (
     SELECT
         d.director_id,
         d.name AS director_name,
-        m.movie_id,
-        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.movie_id) AS cnt_movies
+        m.title,
+        m.budget,
+        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.title) AS cnt_movies
     FROM
         directors d
     JOIN
@@ -361,36 +367,35 @@ WITH director_movies AS (
     JOIN
         movies m ON md.movie_id = m.movie_id
 ),
-ranked_movies AS (
+minmax AS (
     SELECT
-        director_id,
-        director_name,
-        movie_id,
-        cnt_movies,
-        MAX(cnt_movies) OVER (PARTITION BY director_id) AS max_movies,
-        MIN(cnt_movies) OVER (PARTITION BY director_id) AS min_movies
+        MAX(cnt_movies) AS max_cnt,
+        MIN(cnt_movies) AS min_cnt
     FROM
         director_movies
 )
 SELECT
     director_id,
     director_name,
-    movie_id,
+    title,
+    budget,
     cnt_movies,
-    max_movies,
-    min_movies
+    max_cnt,
+    min_cnt
 FROM
-    ranked_movies;
+    director_movies, minmax;
+
+
 
 
 --d: Use the NTILE(4) function to divide directors into four categories based on their movie counts.
-
 WITH director_movies AS (
     SELECT
         d.director_id,
         d.name AS director_name,
-        m.movie_id,
-        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.movie_id) AS cnt_movies
+        m.title,
+        m.budget,
+        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.title) AS cnt_movies
     FROM
         directors d
     JOIN
@@ -398,25 +403,28 @@ WITH director_movies AS (
     JOIN
         movies m ON md.movie_id = m.movie_id
 ),
-ranked_movies AS (
+minmax AS (
     SELECT
-        director_id,
-        director_name,
-        movie_id,
-        cnt_movies,
-        MAX(cnt_movies) OVER (PARTITION BY director_id) AS max_movies,
-        MIN(cnt_movies) OVER (PARTITION BY director_id) AS min_movies
+        MAX(cnt_movies) AS max_cnt,
+        MIN(cnt_movies) AS min_cnt
     FROM
         director_movies
 )
 SELECT
     director_id,
     director_name,
-    movie_id,
+    title,
+    budget,
     cnt_movies,
-    NTILE(4) OVER (PARTITION BY director_id ORDER BY cnt_movies) AS movie_category
+    max_cnt,
+    min_cnt,
+    NTILE(4) OVER (ORDER BY cnt_movies) AS mv_cnt_cat
 FROM
-    ranked_movies;
+    director_movies, minmax
+ORDER BY
+    cnt_movies DESC;
+
+
 
 
 --e: The final result should have the following columns: director_id, director_name, max_cnt, min_cnt, and mv_cnt_cat. Order it by max_cnt from the largest to smallest.
@@ -424,8 +432,9 @@ WITH director_movies AS (
     SELECT
         d.director_id,
         d.name AS director_name,
-        m.movie_id,
-        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.movie_id) AS cnt_movies
+        m.title,
+        m.budget,
+        ROW_NUMBER() OVER (PARTITION BY d.director_id ORDER BY m.title) AS cnt_movies
     FROM
         directors d
     JOIN
@@ -433,27 +442,21 @@ WITH director_movies AS (
     JOIN
         movies m ON md.movie_id = m.movie_id
 ),
-ranked_movies AS (
+minmax AS (
     SELECT
-        director_id,
-        director_name,
-        movie_id,
-        cnt_movies,
-        MAX(cnt_movies) OVER (PARTITION BY director_id) AS max_movies,
-        MIN(cnt_movies) OVER (PARTITION BY director_id) AS min_movies,
-        COUNT(movie_id) OVER (PARTITION BY director_id) AS total_movies
+        MAX(cnt_movies) AS max_cnt,
+        MIN(cnt_movies) AS min_cnt
     FROM
         director_movies
 )
 SELECT
     director_id,
     director_name,
-    max_movies AS max_cnt,
-    min_movies AS min_cnt,
-    NTILE(4) OVER (PARTITION BY director_id ORDER BY cnt_movies) AS mv_cnt_cat
+    max_cnt,
+    min_cnt,
+    NTILE(4) OVER (ORDER BY cnt_movies) AS mv_cnt_cat
 FROM
-    ranked_movies
-WHERE
-    total_movies > 1 
+    director_movies, minmax
 ORDER BY
     max_cnt DESC;
+    
