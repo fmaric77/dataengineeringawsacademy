@@ -282,8 +282,32 @@ Objective: Identify what is wrong with the following query. Rewrite it and find 
 
 HINT: Use HAVING and COUNT window function.*/
 
---a: Write a query that will list each director along with the movie unique identifier for each movie they have directed, using the ROW_NUMBER() function. The result should return all columns from the directors table and a new column cnt_movies which shows a sequential number for each movie directed by a director.
 
+--Original Query
+SELECT
+ md.director_id,
+ COUNT(md.movie_id) AS cnt_movies
+FROM public.movie_directors md
+WHERE cnt_movies > 10
+GROUP BY md.director_id
+ORDER BY cnt_movies;
+
+
+--corrected query
+SELECT
+    md.director_id,
+    COUNT(md.movie_id) AS cnt_movies
+FROM 
+    public.movie_directors md
+GROUP BY 
+    md.director_id
+HAVING 
+    COUNT(md.movie_id) > 10
+ORDER BY 
+    cnt_movies;
+
+
+--a: Write a query that will list each director along with the movie unique identifier for each movie they have directed, using the ROW_NUMBER() function. The result should return all columns from the directors table and a new column cnt_movies which shows a sequential number for each movie directed by a director.
 SELECT
     d.director_id,
     d.name AS director_name,
@@ -295,6 +319,8 @@ JOIN
     movie_directors md ON d.director_id = md.director_id
 JOIN
     movies m ON md.movie_id = m.movie_id;
+
+    
 
 --b: Rewrite the previous query using the WITH clause.
 
