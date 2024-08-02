@@ -149,7 +149,21 @@ ORDER BY m.title;
 
 
 WITH SplitNames AS (
-    SELECT name, TRIM(SPLIT_PART(name, ' ', 2)) AS last_name
+    SELECT 
+        name, 
+        TRIM(
+            SPLIT_PART(
+                TRIM(
+                    REGEXP_REPLACE(
+                        name,
+                        '(Mr.|Mrs.|Ms.|Dr.|DVM|Jr.|PhD|MD|DDS|Miss|JS|IV|II)\s*',
+                        ''
+                    )
+                ), 
+                ' ', 
+                2
+            )
+        ) AS last_name
     FROM directors
 ),
 DirectorPairs AS (
