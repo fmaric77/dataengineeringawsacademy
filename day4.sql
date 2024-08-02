@@ -134,31 +134,34 @@ $$ LANGUAGE plpgsql;
 CALL frequent_actors_maric();
 
 
+--Without the procedure*
+SELECT m.title
+FROM movies m
+JOIN movie_actors ma ON m.movie_id = ma.movie_id
+JOIN actors a ON ma.actor_id = a.actor_id
+GROUP BY m.title
+HAVING COUNT(a.actor_id) > 5
+ORDER BY m.title;
+
 --### Task 5: Find Pairs of Directors with the Same Last Name
 
 -- **Objective**: Write a query to find pairs of directors who share the same last name. The output should include the names of both directors.
-CREATE OR REPLACE PROCEDURE same_last_name_directors_maric()
-AS $$
-DECLARE
-    rec RECORD;
-BEGIN
-    FOR rec IN
-        SELECT d1.name AS director1, d2.name AS director2
-        FROM directors d1
-        JOIN directors d2 ON d1.name <> d2.name
-        WHERE SPLIT_PART(d1.name, ' ', 2) = SPLIT_PART(d2.name, ' ', 2)
-    LOOP
-        RAISE NOTICE '% | %', rec.director1, rec.director2;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
 
---CALL same_last_name_directors_maric();
---Without the procedure*
-SELECT d1.name AS director1, d2.name AS director2
-FROM directors d1
-JOIN directors d2 ON d1.name <> d2.name
-WHERE SPLIT_PART(d1.name, ' ', 2) = SPLIT_PART(d2.name, ' ', 2);
+
+WITH SplitNames AS (
+    SELECT name, TRIM(SPLIT_PART(name, ' ', 2)) AS last_name
+    FROM directors
+),
+DirectorPairs AS (
+    SELECT
+        d1.name AS director1,
+        d2.name AS director2
+    FROM SplitNames d1
+    JOIN SplitNames d2 ON d1.last_name = d2.last_name AND d1.name < d2.name
+)
+SELECT director1, director2
+FROM DirectorPairs
+ORDER BY director1, director2;
 
 --### Task 6: Find Pairs of Assistant Directors Reporting to the Same Director
 
