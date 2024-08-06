@@ -172,47 +172,47 @@ logger.addHandler(handler)
 
 
 
-# mixed_list = [
-#     1,
-#     "February",
-#     "March",
-#     4.0,
-#     "May",
-#     "June",
-#     "July",
-#     "8",
-#     "September",
-#     "October",
-#     "November",
-#     "12",
-# ]
+mixed_list = [
+    1,
+    "February",
+    "March",
+    4.0,
+    "May",
+    "June",
+    "July",
+    "8",
+    "September",
+    "October",
+    "November",
+    "12",
+]
 
-# month_names = [
-#     "January", "February", "March", "April", "May", "June",
-#     "July", "August", "September", "October", "November", "December"
-# ]
+month_names = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+]
 
-# months_dict_list = []
+months_dict_list = []
 
-# for item in mixed_list:
-#     if isinstance(item, (int, float)) or (isinstance(item, str) and item.isdigit()):
-#         month_number = int(float(item))
-#         if 1 <= month_number <= 12:
-#             month_dict = {
-#                 "name": month_names[month_number - 1],
-#                 "number": month_number
-#             }
-#             months_dict_list.append(month_dict)
-#     else:
-#         if item in month_names:
-#             month_number = month_names.index(item) + 1
-#             month_dict = {
-#                 "name": item,
-#                 "number": month_number
-#             }
-#             months_dict_list.append(month_dict)
+for item in mixed_list:
+    if isinstance(item, (int, float)) or (isinstance(item, str) and item.isdigit()):
+        month_number = int(float(item))
+        if 1 <= month_number <= 12:
+            month_dict = {
+                "name": month_names[month_number - 1],
+                "number": month_number
+            }
+            months_dict_list.append(month_dict)
+    else:
+        if item in month_names:
+            month_number = month_names.index(item) + 1
+            month_dict = {
+                "name": item,
+                "number": month_number
+            }
+            months_dict_list.append(month_dict)
 
-# logger.info(months_dict_list)
+#logger.info(months_dict_list)
 
 
 
@@ -221,35 +221,19 @@ logger.addHandler(handler)
 
 
 
+with open('day_2.json', 'w') as file:
+    json.dump(months_dict_list[:6], file, indent=4)
 
-# months_dict_list = [
-#     {"name": "January", "number": 1},
-#     {"name": "February", "number": 2},
-#     {"name": "March", "number": 3},
-#     {"name": "April", "number": 4},
-#     {"name": "May", "number": 5},
-#     {"name": "June", "number": 6},
-#     {"name": "July", "number": 7},
-#     {"name": "August", "number": 8},
-#     {"name": "September", "number": 9},
-#     {"name": "October", "number": 10},
-#     {"name": "November", "number": 11},
-#     {"name": "December", "number": 12}
-# ]
+with open('day_2.json', 'r+') as file:
+    data = json.load(file)
+    data.extend(months_dict_list[-4:])
+    file.seek(0)
+    json.dump(data, file, indent=4)
 
-# with open('day_2.json', 'w') as file:
-#     json.dump(months_dict_list[:6], file, indent=4)
-
-# with open('day_2.json', 'r+') as file:
-#     data = json.load(file)
-#     data.extend(months_dict_list[-4:])
-#     file.seek(0)
-#     json.dump(data, file, indent=4)
-
-# with open('day_2.json', 'r') as file:
-#     data = json.load(file)
-#     logger.info(data)
-#     logger.info(f"Length of the list: {len(data)}")
+with open('day_2.json', 'r') as file:
+    data = json.load(file)
+    logger.info(data)
+    logger.info(f"Length of the list: {len(data)}")
 
 
 
