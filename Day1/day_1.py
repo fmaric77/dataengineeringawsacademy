@@ -12,13 +12,13 @@ logger.addHandler(handler)
 
 
 
-#2
+# 2
 
 
 # with open('Day1/task_1.txt', 'r') as file:
 #     months = [line.strip() for line in file.readlines()]
 
-# logger.info(months)
+# logger.info("Task 2", months)
 
 
 
@@ -30,7 +30,7 @@ logger.addHandler(handler)
 #     months = [line.strip() for line in file.readlines()]
 
 # months_string = ', '.join(months)
-# logger.info(months_string)
+# logger.info("Task 3", f"({months_string})")
 
 
 #4
@@ -43,7 +43,7 @@ logger.addHandler(handler)
 #     return ', '.join(months)
 
 # months_string = get_months_string('Day1/task_1.txt')
-# logger.info(months_string)
+# logger.info("Task 4", f"({months_string})")
 
 
 
@@ -68,7 +68,7 @@ logger.addHandler(handler)
 #     ]
 
 # concatenated_string = ', '.join(map(str, mixed_list))
-# logger.info(concatenated_string)
+# logger.info("Task 5", f"({concatenated_string})")
 
 
 
@@ -113,7 +113,7 @@ logger.addHandler(handler)
 # validate_list(mixed_list)
 
 # concatenated_string = ', '.join(map(str, mixed_list))
-# logger.info(concatenated_string)
+# logger.info("Task 6", f"({concatenated_string})")
 
 
 
