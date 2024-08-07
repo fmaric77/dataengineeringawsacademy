@@ -96,6 +96,7 @@ class CSVMerger:
 
 merger = CSVMerger(file1='task_1.csv', file2='extra_3.csv', output_file='merged.csv', common_column='Invoice Number')
 merger.merge_csv_files()
+
 # %%
 ## TASKS EXTRA EXTRA
 from dataclasses import dataclass
