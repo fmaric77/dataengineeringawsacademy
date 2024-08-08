@@ -200,6 +200,9 @@ def read_neo_data(start_date, nr_of_days):
         start_date_obj = end_date_obj + timedelta(days=1)
         days_remaining = 0
 
+    if not all_data:
+        return None
+
     return all_data
 
 def format_neo_data(neo_data):
@@ -233,6 +236,10 @@ def get_neo_data():
         return jsonify({"error": "nr_of_days must be an integer"}), 400
     
     neo_data = read_neo_data(start_date, nr_of_days)
+    
+    if neo_data is None:
+        return jsonify({"error": "Data for the specified date range does not exist locally"}), 404
+    
     formatted_neo_data = format_neo_data(neo_data)
     return jsonify(json.loads(formatted_neo_data))
 
