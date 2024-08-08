@@ -123,6 +123,7 @@ fetch_neo_feed(api_key, start_date, nr_of_days)
 
 #extra extra
 #%%
+import socket
 import requests
 import os
 import json
@@ -184,6 +185,7 @@ def read_neo_data(start_date, nr_of_days):
     days_remaining = nr_of_days
 
     all_data = []
+    available_days = 0
 
     while days_remaining > 0:
         end_date_obj = start_date_obj + timedelta(days=days_remaining - 1)
@@ -196,12 +198,16 @@ def read_neo_data(start_date, nr_of_days):
                 with open(filepath, 'r') as file:
                     neo_data = json.load(file)
                     all_data.append({date_str: neo_data})
+                available_days += 1
         
         start_date_obj = end_date_obj + timedelta(days=1)
         days_remaining = 0
 
     if not all_data:
         return None
+
+    if nr_of_days > available_days:
+        return {"error": f"Requested {nr_of_days} days, but only {available_days} days are available locally"}
 
     return all_data
 
@@ -211,7 +217,9 @@ def format_neo_data(neo_data):
 
 api_key = 'ohnCtAPxXzOOfC09PZZ7tEfvCCEUh75oEKhgIBfZ'
 start_date = '2024-06-01'
-nr_of_days = 20
+
+#DEAR COLLEGUE  YOU CAN CHANGE THE NUMBER OF DAYS TO FETCH HERE
+nr_of_days = 21
 
 fetch_neo_feed(api_key, start_date, nr_of_days)
 
@@ -240,12 +248,27 @@ def get_neo_data():
     if neo_data is None:
         return jsonify({"error": "Data for the specified date range does not exist locally"}), 404
     
+    if isinstance(neo_data, dict) and "error" in neo_data:
+        return jsonify(neo_data), 400
+    
     formatted_neo_data = format_neo_data(neo_data)
     return jsonify(json.loads(formatted_neo_data))
 
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
+
 if __name__ == '__main__':
-    print("Running on http://192.168.144.208:5000")
+    local_ip = get_local_ip()
+    print(f"Running on http://{local_ip}:5000")
     app.run(host='0.0.0.0', port=5000)
 
 #%%
-#TEST -http://192.168.144.208:5000/neo_data?start_date=2024-06-01&nr_of_days=10
+#YOU CAN TEST WITH THIS  /neo_data?start_date=2024-06-01&nr_of_days=10
