@@ -13,7 +13,8 @@ async def root():
         "message": "Welcome to the Nobel Prize API!",
         "endpoints": {
             "Get Nobel Prizes by Category": "/nobel_prizes/{category}",
-            "Get Nobel Prizes by Year": "/nobel_prizes/year/{year}"
+            "Get Nobel Prizes by Year": "/nobel_prizes/year/{year}",
+            "To test PUT go to": "/docs"
         
         }
     }
