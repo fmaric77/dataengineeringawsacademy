@@ -41,16 +41,13 @@ class Name(BaseModel):
     first_name: str
     surname: str
 
-class LaureateUpdate(BaseModel):
-    name: Name
-
 @app.put("/nobel_prizes/laureate/{id}", response_model=Dict[str, Any])
-async def update_laureate_name(id: str, laureate_update: LaureateUpdate):
+async def update_laureate_name(id: str, name: Name):
     for prize in nobel_prizes:
         for laureate in prize.get('laureates', []):
             if laureate['id'] == id:
-                laureate['firstname'] = laureate_update.name.first_name
-                laureate['surname'] = laureate_update.name.surname
+                laureate['firstname'] = name.first_name
+                laureate['surname'] = name.surname
                 
                 with open('Day4/nobel_prizes.json', 'w') as file:
                     json.dump({"prizes": nobel_prizes}, file, indent=4)
