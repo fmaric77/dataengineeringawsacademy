@@ -33,7 +33,7 @@ Summary
   - Data Transfer Cost: $500
   - Monthly Storage Cost in S3 Standard: $1,150
   - Monthly Storage Cost in S3 Glacier: $200
-  - By transferring the data to S3 Glacier, we will incur a one-time transfer cost of $500, but you will still reduce the monthly storage cost from $1,150 to $200.
+  - By transferring the data to S3 Glacier, we will incur a one-time transfer cost of $500, but we  will still reduce the monthly storage cost from $1,150 to $200.
 
 https://aws.amazon.com/s3/pricing/
 https://calculator.aws/#/
