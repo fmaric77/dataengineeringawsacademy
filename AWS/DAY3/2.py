@@ -74,26 +74,15 @@ s3_client = boto3.client('s3')
 s3 = boto3.resource('s3')
 
 def lambda_handler(event, context):
-    table_name_global = 'fmaric-academy-global'
     table_name_jobs = 'fmaric-academy-jobs'
     bucket_name = 'fmaric-academy-aws'
-    table_global = dynamodb.Table(table_name_global)
     table_jobs = dynamodb.Table(table_name_jobs)
     url_partitions = 'https://xtpc22s81a.execute-api.eu-central-1.amazonaws.com/v1/imdb/partitions/'
     url_data = 'https://xtpc22s81a.execute-api.eu-central-1.amazonaws.com/v1/imdb/dataset/'
-    bucket = s3.Bucket(bucket_name)
     dt_format = "%Y%m%dT%H%M%S.%f"
-    
-    response_global = table_global.get_item(
-        Key = {
-            'name': 'imdb-rest-api'
-        }
-    )
-    jobs = response_global['Item']['jobs']
-    
-    joined_string = ''.join(jobs)
-    normalized_string = joined_string.replace('\\"', '"')
-    normal_list_jobs = json.loads(normalized_string)
+
+    response_jobs = table_jobs.scan()
+    jobs = response_jobs['Items']
 
     def fetch_partition_data(url):
         response = requests.get(url)
@@ -105,12 +94,7 @@ def lambda_handler(event, context):
         s3_client.put_object(Bucket=bucket_name, Key=f'imdb/landing/{table_name}/{partition_name}.json', Body=partition_data, ContentType='application/json')
 
     def process_job(job):
-        response_jobs = table_jobs.get_item(
-            Key = {
-                'table_name': job
-            }
-        )
-        table_name = response_jobs['Item']['table_name']
+        table_name = job['table_name']
         
         response_partition = fetch_partition_data(url_partitions + table_name)
         partitions = response_partition
@@ -126,7 +110,6 @@ def lambda_handler(event, context):
         
         tmp = 'min_ingestion_dttm: ' + str(latest_dttm)
         table_jobs.update_item(
-            TableName=table_name_jobs,
             Key={
                 'table_name': table_name
             },
@@ -138,4 +121,76 @@ def lambda_handler(event, context):
         )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(process_job, normal_list_jobs)
+        executor.map(process_job, jobs)
+
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Scan",
+  "States": {
+    "Scan": {
+      "Type": "Task",
+      "Parameters": {
+        "TableName": "fmaric-academy-jobs"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "Map"
+    },
+    "Map": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "GetAndUpdate",
+        "States": {
+          "GetAndUpdate": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "arn:aws:lambda:eu-central-1:381492288052:function:fmaric-academy-lambda:$LATEST"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "End": true,
+      "ItemsPath": "$.Items"
+    }
+  }
+}
+
+
+
+
+
+### Detailed Workflow:
+
+# 1. **DynamoDB Table Scan**:
+#    - The Step Function starts by scanning the [`fmaric-academy-jobs`](command:_github.copilot.openSymbolFromReferences?%5B%22fmaric-academy-jobs%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A76%2C%22character%22%3A23%7D%7D%5D%5D "Go to definition") DynamoDB table.
+
+# 2. **Map State**:
+#    - The Step Function uses a Map state to process each job item from the scan result.
+
+# 3. **Lambda Invocation**:
+#    - For each job item, the Step Function invokes the [`fmaric-academy-lambda`](command:_github.copilot.openSymbolFromReferences?%5B%22fmaric-academy-lambda%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A76%2C%22character%22%3A23%7D%7D%5D%5D "Go to definition") Lambda function.
+
+# 4. **Lambda Function Execution**:
+#    - The Lambda function fetches partition data from the [`url_partitions`](command:_github.copilot.openSymbolFromReferences?%5B%22url_partitions%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A79%2C%22character%22%3A4%7D%7D%5D%5D "Go to definition") API.
+#    - It then fetches and uploads data from the [`url_data`](command:_github.copilot.openSymbolFromReferences?%5B%22url_data%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A80%2C%22character%22%3A4%7D%7D%5D%5D "Go to definition") API to the [`fmaric-academy-aws`](command:_github.copilot.openSymbolFromReferences?%5B%22fmaric-academy-aws%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A76%2C%22character%22%3A23%7D%7D%5D%5D "Go to definition") S3 bucket.
+#    - The Lambda function updates the [`fmaric-academy-jobs`](command:_github.copilot.openSymbolFromReferences?%5B%22fmaric-academy-jobs%22%2C%5B%7B%22uri%22%3A%7B%22%24mid%22%3A1%2C%22fsPath%22%3A%22c%3A%5C%5CUsers%5C%5CAcademy2024%5C%5CDesktop%5C%5Cfmaric%5C%5CAWS%5C%5CDAY3%5C%5C2.py%22%2C%22_sep%22%3A1%2C%22external%22%3A%22file%3A%2F%2F%2Fc%253A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FAcademy2024%2FDesktop%2Ffmaric%2FAWS%2FDAY3%2F2.py%22%2C%22scheme%22%3A%22file%22%7D%2C%22pos%22%3A%7B%22line%22%3A76%2C%22character%22%3A23%7D%7D%5D%5D "Go to definition") DynamoDB table with the latest ingestion datetime.
+
