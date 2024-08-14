@@ -81,24 +81,24 @@ def lambda_handler(event, context):
 
 # Compute Duration:
 
-# Execution time per request: 300 seconds
-# Memory allocated: 128 MB (0.125 GB)
-# Compute duration per request: 300 seconds * 0.125 GB = 37.5 GB-seconds
-# Monthly Compute Duration:
+## TASK 11
+ 
+### Lambda Execution Cost Calculation
+###- **Executions per Month:** 1,000
+###- **Average Processing Time per Execution:** 5 minutes
+ 
+### Result
+###- **Total Monthly Cost:** $5
 
-# Total executions per month: 1000
-# Total compute duration: 1000 * 37.5 GB-seconds = 37,500 GB-seconds
-# Cost Calculation:
-
-# AWS Lambda pricing (as of the latest update): $0.00001667 per GB-second
-# Monthly cost: 37,500 GB-seconds * $0.00001667 = $0.625125
-# So, the total monthly Lambda execution cost is approximately $0.63.
 
 # Additional Costs to Consider
 # API Requests: Cost of making HTTP requests to the IMDb API.
 # S3 Storage: Cost of storing the JSON responses in the S3 bucket.
 # DynamoDB: Cost of reading from and writing to DynamoDB tables.
 # Data Transfer: Cost of data transfer between AWS services (e.g., Lambda to S3, Lambda to DynamoDB).
+
+
+
 # Strategies to Reduce Execution Time
 # Parallel Processing: Use ThreadPoolExecutor to parallelize HTTP requests and S3 uploads, as already implemented.
 # Batch Processing: Fetch and process data in batches to reduce the number of API calls and DynamoDB reads.
