@@ -125,3 +125,83 @@ title_ratings_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s
 # Commit the job
 job.commit()
 
+
+
+#lambda
+
+
+import json
+import boto3
+from datetime import datetime
+import requests
+
+dynamodb_resource = boto3.resource('dynamodb')
+dynamodb_client = boto3.client('dynamodb')
+s3_client = boto3.client('s3')
+
+def get_global_configuration():
+    table = dynamodb_resource.Table('fmaric-academy-global')
+    response = table.get_item(
+        Key= {
+            'name': 'imdb-rest-api',
+        }
+    )
+    item = response['Item']
+    return item
+
+def save_to_s3(data, table_name):
+    timestamp = datetime.now().strftime('%Y%m%dT%H%M%S.%f')
+    s3_path = f"imdb/landing/{table_name}/{timestamp}.json"
+    data_bytes = bytes(data, "UTF-8")
+    s3_client.put_object(
+        Bucket='fmaric-academy-aws',
+        Key=s3_path,
+        Body=data_bytes,
+        ContentType='application/json'
+    )
+
+def update_jobs(job_name, current_time):
+    table = dynamodb_resource.Table('fmaric-academy-jobs')
+    ingestion_dttm = json.dumps({"min_ingestion_dttm": current_time})
+    table.update_item(
+        Key={
+            'table_name': job_name
+        },
+        UpdateExpression='SET params = :time',
+        ExpressionAttributeValues={
+            ':time': ingestion_dttm
+        }
+    )
+
+def lambda_handler(event, context):
+    job = event.get('table_name')
+    job_name = job['S']
+
+    global_config = get_global_configuration()
+   
+    base_url = global_config['url'].format(
+        method=global_config['method'],
+        host=global_config['host'],
+        port=global_config['port'],
+        prefix=global_config['prefix']
+    )
+   
+    full_url_partitions = base_url + global_config['partitions_uri']
+    full_url_partitions = full_url_partitions.format(table_name=job_name)
+    response_partition = requests.get(full_url_partitions)
+    data = response_partition.json()
+
+    for partition_number in data:
+        specific_url = f"{base_url}/dataset/{job_name}?min_ingestion_dttm={partition_number}"
+        specific_partition_response = requests.get(specific_url)
+        specific_partition_data = specific_partition_response.json()
+        save_to_s3(specific_partition_data, job_name)
+
+    current_time = datetime.now().strftime('%Y%m%dT%H%M%S')
+    update_jobs(job_name, current_time)
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Ingestion completed successfully!')
+    }
+
