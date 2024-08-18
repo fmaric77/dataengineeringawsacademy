@@ -1,3 +1,5 @@
+# FIXME: only one lambda_handler function can be inside a file, move warmup-1 and 2 into a separate files
+
 # Warmup task
 # The main idea for this task is to give you a better explanation what orchestration of services means and how to "chain services together".
 
@@ -74,9 +76,11 @@ s3_client = boto3.client('s3')
 s3 = boto3.resource('s3')
 
 def lambda_handler(event, context):
+    # FIXME: these variables needs to be outside of lambda_handler and moved into a environment variables
     table_name_jobs = 'fmaric-academy-jobs'
     bucket_name = 'fmaric-academy-aws'
     table_jobs = dynamodb.Table(table_name_jobs)
+    # FIXME: these variables needs to be extracted from dynamodb global variables
     url_partitions = 'https://xtpc22s81a.execute-api.eu-central-1.amazonaws.com/v1/imdb/partitions/'
     url_data = 'https://xtpc22s81a.execute-api.eu-central-1.amazonaws.com/v1/imdb/dataset/'
     dt_format = "%Y%m%dT%H%M%S.%f"
@@ -85,12 +89,14 @@ def lambda_handler(event, context):
     jobs = response_jobs['Items']
 
     def fetch_partition_data(url):
+        # FIXME: need to add behavior for responses other than 200
         response = requests.get(url)
         return response.json()
 
     def fetch_and_upload_data(table_name, partition_name):
         response_data = fetch_partition_data(url_data + table_name + '?min_ingestion_dttm=' + partition_name)
         partition_data = bytes(json.dumps(response_data), 'utf-8')
+        # FIXME: add try/except
         s3_client.put_object(Bucket=bucket_name, Key=f'imdb/landing/{table_name}/{partition_name}.json', Body=partition_data, ContentType='application/json')
 
     def process_job(job):
@@ -99,6 +105,7 @@ def lambda_handler(event, context):
         response_partition = fetch_partition_data(url_partitions + table_name)
         partitions = response_partition
         
+        # FIXME: move downloading of JSON file for each parition in a separate function
         latest_dttm = datetime.strptime(partitions[0], dt_format)
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(fetch_and_upload_data, table_name, partition_name) for partition_name in partitions]
@@ -108,6 +115,7 @@ def lambda_handler(event, context):
                 if dt > latest_dttm:
                     latest_dttm = dt
         
+        # FIXME: move to separate function
         tmp = 'min_ingestion_dttm: ' + str(latest_dttm)
         table_jobs.update_item(
             Key={
@@ -122,6 +130,8 @@ def lambda_handler(event, context):
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(process_job, jobs)
+
+# Great work with your effort to make code more efficient. You showed very high level of python knowledge
 
 {
   "Comment": "A description of my state machine",
