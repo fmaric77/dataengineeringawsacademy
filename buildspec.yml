@@ -3,13 +3,14 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo "Start install"
-      - echo  $(date)
-      - echo "End install"
+      - echo "Start Install"
+      - echo $(date)
+      - echo "End Install"
 
   build:
     commands:
       - echo "Start Build"
-      - echo  $(date)
+      - echo $(date)
+      - aws cloudformation deploy --template-file aws/cicd/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData=BucketData S3BucketScripts=BucketScripts --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+      - aws cloudformation deploy --template-file aws/cicd/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName=tableGlobal DynamoDBTableJobsName=tableJobs --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - echo "End Build"
- 
