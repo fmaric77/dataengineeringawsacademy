@@ -15,13 +15,28 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "name"
           AttributeType: "S"
+        - AttributeName: "host"
+          AttributeType: "S"
+        - AttributeName: "jobs"
+          AttributeType: "S"
+        - AttributeName: "method"
+          AttributeType: "S"
+        - AttributeName: "partitions_uri"
+          AttributeType: "S"
+        - AttributeName: "port"
+          AttributeType: "N"
+        - AttributeName: "prefix"
+          AttributeType: "S"
+        - AttributeName: "tz"
+          AttributeType: "S"
+        - AttributeName: "url"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-
       Tags:
         - Key: "Owner: "
           Value: "fmaric"
@@ -33,6 +48,12 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "table_name"
           AttributeType: "S"
+        - AttributeName: "min_ingestion_dttm"
+          AttributeType: "S"
+        - AttributeName: "params"
+          AttributeType: "S"
+        - AttributeName: "uri"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "table_name"
           KeyType: HASH
@@ -42,6 +63,7 @@ Resources:
       Tags:
         - Key: "Owner: "
           Value: "fmaric"
+
 Outputs:
   tableGlobal:
     Description: "Name of the table global"
