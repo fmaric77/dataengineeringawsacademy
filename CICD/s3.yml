@@ -1,9 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create an S3 bucket with specified tags
+Description: CloudFormation template to create two S3 buckets with specified tags
 
 Parameters:
   S3BucketData:
     Description: Name of the S3 bucket to store data
+    Type: String
+
+  S3BucketScripts:
+    Description: Name of the S3 bucket to store scripts
     Type: String
 
 Resources:
@@ -15,7 +19,19 @@ Resources:
         - Key: Owner
           Value: "fmaric"
 
+  ScriptsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties: 
+      BucketName: "fmaric-academy-aws-cf-scripts"
+      Tags:
+        - Key: Owner
+          Value: "fmaric"
+
 Outputs:
   DataBucketName:
     Description: Name of the S3 Data Bucket
     Value: !Ref DataBucket
+
+  ScriptsBucketName:
+    Description: Name of the S3 Scripts Bucket
+    Value: !Ref ScriptsBucket
