@@ -1,118 +1,51 @@
-Resources:
-  GlobalTable:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      TableName: "fmaric-academly-global-cl"
-      AttributeDefinitions:
-        - AttributeName: "name"
-          AttributeType: "S"
-        - AttributeName: "host"
-          AttributeType: "S"
-        - AttributeName: "jobs"
-          AttributeType: "S"
-        - AttributeName: "method"
-          AttributeType: "S"
-        - AttributeName: "partitions_uri"
-          AttributeType: "S"
-        - AttributeName: "port"
-          AttributeType: "S"
-        - AttributeName: "prefix"
-          AttributeType: "S"
-        - AttributeName: "tz"
-          AttributeType: "S"
-        - AttributeName: "url"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "name"
-          KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-        - IndexName: "host-index"
-          KeySchema:
-            - AttributeName: "host"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "jobs-index"
-          KeySchema:
-            - AttributeName: "jobs"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "method-index"
-          KeySchema:
-            - AttributeName: "method"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "partitions_uri-index"
-          KeySchema:
-            - AttributeName: "partitions_uri"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "port-index"
-          KeySchema:
-            - AttributeName: "port"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "prefix-index"
-          KeySchema:
-            - AttributeName: "prefix"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "tz-index"
-          KeySchema:
-            - AttributeName: "tz"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "url-index"
-          KeySchema:
-            - AttributeName: "url"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
+AWSTemplateFormatVersion: '2010-09-09'
 
-  JobsTable:
-    Type: 'AWS::DynamoDB::Table'
+Parameters:
+  DynamoDBTableGlobalName:
+    Type: String
+
+  DynamoDBTableJobsName:
+    Type: String
+
+Resources:
+  tableGlobal:
+    Type: "AWS::DynamoDB::Table"
     Properties:
-      TableName: "fmaric-academy-jobs-cl"
+      TableName: !Ref DynamoDBTableGlobalName
       AttributeDefinitions:
-        - AttributeName: "table_name"
-          AttributeType: "S"
-        - AttributeName: "min_ingestion_dttm"
-          AttributeType: "S"
-        - AttributeName: "params"
-          AttributeType: "S"
-        - AttributeName: "uri"
+        - AttributeName: "name"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "table_name"
-          KeyType: "HASH"
+        - AttributeName: "name"
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-        - IndexName: "min_ingestion_dttm-index"
-          KeySchema:
-            - AttributeName: "min_ingestion_dttm"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "params-index"
-          KeySchema:
-            - AttributeName: "params"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "uri-index"
-          KeySchema:
-            - AttributeName: "uri"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
+
+      Tags:
+        - Key: "Owner: "
+          Value: "fmaric"
+
+  tableJobs:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Ref DynamoDBTableJobsName
+      AttributeDefinitions:
+        - AttributeName: "table_name"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "table_name"
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+        - Key: "Owner: "
+          Value: "fmaric"
+Outputs:
+  tableGlobal:
+    Description: "Name of the table global"
+    Value: !Ref tableGlobal
+  tableJobs:
+    Description: "Name of the table jobs"
+    Value: !Ref tableJobs
