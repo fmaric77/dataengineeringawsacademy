@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo "Running pre-build steps..."
+      - pytest tests/
+  build:
+    commands:
+      - echo "Building the project..."
+      - echo "Build complete!"
+  post_build:
+    commands:
+      - echo "Post-build steps..."
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
