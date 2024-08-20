@@ -1,0 +1,79 @@
+Resources:
+  GlobalTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: "fmaric-academly-global-cl"
+      AttributeDefinitions:
+        - AttributeName: "name"
+          AttributeType: "S"
+        - AttributeName: "host"
+          AttributeType: "S"
+        - AttributeName: "jobs"
+          AttributeType: "S"
+        - AttributeName: "method"
+          AttributeType: "S"
+        - AttributeName: "partitions_uri"
+          AttributeType: "S"
+        - AttributeName: "port"
+          AttributeType: "S"
+        - AttributeName: "prefix"
+          AttributeType: "S"
+        - AttributeName: "tz"
+          AttributeType: "S"
+        - AttributeName: "url"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "name"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+        - IndexName: "host-index"
+          KeySchema:
+            - AttributeName: "host"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "jobs-index"
+          KeySchema:
+            - AttributeName: "jobs"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "method-index"
+          KeySchema:
+            - AttributeName: "method"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "partitions_uri-index"
+          KeySchema:
+            - AttributeName: "partitions_uri"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "port-index"
+          KeySchema:
+            - AttributeName: "port"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "prefix-index"
+          KeySchema:
+            - AttributeName: "prefix"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "tz-index"
+          KeySchema:
+            - AttributeName: "tz"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "url-index"
+          KeySchema:
+            - AttributeName: "url"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"

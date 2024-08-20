@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create two S3 buckets and a DynamoDB table with specified tags and columns
+Description: CloudFormation template to create two S3 buckets with specified tags
 
 Parameters:
   S3BucketData:
@@ -27,69 +27,6 @@ Resources:
         - Key: Owner
           Value: "fmaric"
 
-  GlobalTable:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      TableName: "fmaric-academly-global-cl"
-      AttributeDefinitions:
-        - AttributeName: "name"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "name"
-          KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-        - IndexName: "host-index"
-          KeySchema:
-            - AttributeName: "host"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "jobs-index"
-          KeySchema:
-            - AttributeName: "jobs"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "method-index"
-          KeySchema:
-            - AttributeName: "method"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "partitions_uri-index"
-          KeySchema:
-            - AttributeName: "partitions_uri"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "port-index"
-          KeySchema:
-            - AttributeName: "port"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "prefix-index"
-          KeySchema:
-            - AttributeName: "prefix"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "tz-index"
-          KeySchema:
-            - AttributeName: "tz"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "url-index"
-          KeySchema:
-            - AttributeName: "url"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-
 Outputs:
   DataBucketName:
     Description: Name of the S3 Data Bucket
@@ -98,7 +35,3 @@ Outputs:
   ScriptsBucketName:
     Description: Name of the S3 Scripts Bucket
     Value: !Ref ScriptsBucket
-
-  GlobalTableName:
-    Description: Name of the DynamoDB Global Table
-    Value: !Ref GlobalTable
