@@ -1,16 +1,25 @@
 version: 0.2
- 
+
 phases:
   install:
     commands:
       - echo "Start Install"
       - echo $(date)
       - echo "End Install"
- 
+
   build:
     commands:
       - echo "Start Build"
       - echo $(date)
+      - |
+        STACK_NAME=fmaric-dynamodb
+        STACK_STATUS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "STACK_NOT_FOUND")
+        if [ "$STACK_STATUS" == "ROLLBACK_COMPLETE" ]; then
+          echo "Stack is in ROLLBACK_COMPLETE state. Deleting stack..."
+          aws cloudformation delete-stack --stack-name $STACK_NAME
+          echo "Waiting for stack to be deleted..."
+          aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+        fi
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cf" DynamoDBTableJobsName="fmaric-academy-jobs-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - echo "End Build"
