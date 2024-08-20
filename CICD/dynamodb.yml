@@ -38,7 +38,7 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       Tags:
-        - Key: "Owner: "
+        - Key: "Owner"
           Value: "fmaric"
 
   tableJobs:
@@ -61,7 +61,7 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       Tags:
-        - Key: "Owner: "
+        - Key: "Owner"
           Value: "fmaric"
 
 Outputs:
