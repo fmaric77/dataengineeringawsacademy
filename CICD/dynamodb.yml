@@ -77,3 +77,42 @@ Resources:
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"
+
+  JobsTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: "fmaric-academy-jobs-cl"
+      AttributeDefinitions:
+        - AttributeName: "table_name"
+          AttributeType: "S"
+        - AttributeName: "min_ingestion_dttm"
+          AttributeType: "S"
+        - AttributeName: "params"
+          AttributeType: "S"
+        - AttributeName: "uri"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "table_name"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+        - IndexName: "min_ingestion_dttm-index"
+          KeySchema:
+            - AttributeName: "min_ingestion_dttm"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "params-index"
+          KeySchema:
+            - AttributeName: "params"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "uri-index"
+          KeySchema:
+            - AttributeName: "uri"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
