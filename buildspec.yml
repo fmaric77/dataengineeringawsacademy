@@ -31,4 +31,13 @@ phases:
       - zip -r fmaric-academy-lambda-cf.zip RESOURCES/fmaric-academy-lambda-cf.py
       - zip -j lambda_$TIMESTAMP.zip RESOURCES/fmaric-academy-lambda-cf.py
       - aws s3 cp lambda_$TIMESTAMP.zip s3://fmaric-academy-aws-cf-scripts/lambda_$TIMESTAMP.zip
+      - |
+        if aws cloudformation describe-stacks --stack-name fmaric-statemachine-stack; then
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name fmaric-statemachine-stack --query "Stacks[0].StackStatus" --output text)
+          if [ "$STACK_STATUS" == "ROLLBACK_FAILED" ] || [ "$STACK_STATUS" == "ROLLBACK_COMPLETE" ]; then
+            echo "Stack is in $STACK_STATUS state, deleting..."
+            aws cloudformation delete-stack --stack-name fmaric-statemachine-stack
+            aws cloudformation wait stack-delete-complete --stack-name fmaric-statemachine-stack
+          fi
+        fi
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-state-machine-stack --parameter-overrides LambdaLandingUploadUNIXT=$TIMESTAMP --capabilities CAPABILITY_NAMED_IAM
