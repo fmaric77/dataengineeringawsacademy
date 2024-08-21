@@ -27,8 +27,9 @@ phases:
           fi
         fi
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM
+      - zip -r fmaric-academy-lambda-cf.zip AWS/resources/fmaric-academy-lambda-cf.py
+      - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3-stack
+      - aws s3 cp fmaric-academy-lambda-cf.zip s3://fmaric-academy-scripts-cf
+      - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb-stack
+      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-state-machine-stack --capabilities CAPABILITY_NAMED_IAM
       - echo "End Build"
-
-
-
-
