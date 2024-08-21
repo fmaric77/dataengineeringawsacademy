@@ -17,6 +17,8 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "name"
           AttributeType: "S"
+        - AttributeName: "url"
+          AttributeType: "S"
         - AttributeName: "host"
           AttributeType: "S"
         - AttributeName: "jobs"
@@ -30,8 +32,6 @@ Resources:
         - AttributeName: "prefix"
           AttributeType: "S"
         - AttributeName: "tz"
-          AttributeType: "S"
-        - AttributeName: "url"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
