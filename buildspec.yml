@@ -28,3 +28,5 @@ phases:
         fi
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM
       - echo "End Build"
+
+      
