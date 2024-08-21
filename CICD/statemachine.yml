@@ -54,7 +54,7 @@ Parameters:
   LambdaLandingUploadUNIXT:
     Type: String
     Description: A parameter to force Lambda deployment update
-    Default: $(date +%s)
+    Default: ""
 
   SNSTopicName:
     Type: String
@@ -225,6 +225,3 @@ Outputs:
   SNSTopic:
     Condition: CreateSNSTopic
     Value: !Ref AcademySNSTopic
-
-
-    

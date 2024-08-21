@@ -26,9 +26,9 @@ phases:
             aws cloudformation wait stack-delete-complete --stack-name fmaric-statemachine-stack
           fi
         fi
+      - TIMESTAMP=$(date +%s)
+      - echo Generated timestamp $TIMESTAMP
       - zip -r fmaric-academy-lambda-cf.zip RESOURCES/fmaric-academy-lambda-cf.py
-      - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-      - aws s3 cp fmaric-academy-lambda-cf.zip s3://fmaric-academy-aws-cf-scripts
-      - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb
-      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-state-machine-stack --capabilities CAPABILITY_NAMED_IAM
-      - echo "End Build"
+      - zip -j lambda_$TIMESTAMP.zip AWS/resources/lambda_function.py
+      - aws s3 cp lambda_$TIMESTAMP.zip s3://fmaric-academy-aws-scripts-cf/lambda_$TIMESTAMP.zip
+      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-state-machine-stack --parameter-overrides LambdaLandingUploadUNIXT=$TIMESTAMP --capabilities CAPABILITY_NAMED_IAM
