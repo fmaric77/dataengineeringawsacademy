@@ -3,12 +3,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   DynamoDBTableGlobalName:
     Type: String
-    Default: "fmaric-academy-global-cl"
     Description: Name of the DynamoDB table for global data.
   
   DynamoDBTableJobsName:
     Type: String
-    Default: "fmaric-academy-jobs-cl"
     Description: Name of the DynamoDB table for jobs data.
 
 Resources:
