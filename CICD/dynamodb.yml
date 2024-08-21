@@ -1,75 +1,51 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create DynamoDB tables with Owner tags.
 
 Parameters:
   DynamoDBTableGlobalName:
     Type: String
-    Description: Name of the DynamoDB table for global data.
-  
+
   DynamoDBTableJobsName:
     Type: String
-    Description: Name of the DynamoDB table for jobs data.
 
 Resources:
-  GlobalDynamoDBTable:
-    Type: AWS::DynamoDB::Table
+  tableGlobal:
+    Type: "AWS::DynamoDB::Table"
     Properties:
       TableName: !Ref DynamoDBTableGlobalName
       AttributeDefinitions:
         - AttributeName: "name"
           AttributeType: "S"
-        - AttributeName: "tz"
-          AttributeType: "S"
-        - AttributeName: "method"
-          AttributeType: "S"
-        - AttributeName: "host"
-          AttributeType: "S"
-        - AttributeName: "port"
-          AttributeType: "S"
-        - AttributeName: "prefix"
-          AttributeType: "S"
-        - AttributeName: "url"
-          AttributeType: "S"
-        - AttributeName: "partitions_uri"
-          AttributeType: "S"
-        - AttributeName: "jobs"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
-          KeyType: "HASH"
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+
       Tags:
-        - Key: Owner
+        - Key: "Owner: "
           Value: "fmaric"
 
-  JobsDynamoDBTable:
-    Type: AWS::DynamoDB::Table
+  tableJobs:
+    Type: "AWS::DynamoDB::Table"
     Properties:
       TableName: !Ref DynamoDBTableJobsName
       AttributeDefinitions:
         - AttributeName: "table_name"
           AttributeType: "S"
-        - AttributeName: "uri"
-          AttributeType: "S"
-        - AttributeName: "params"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "table_name"
-          KeyType: "HASH"
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       Tags:
-        - Key: Owner
+        - Key: "Owner: "
           Value: "fmaric"
-
 Outputs:
-  GlobalTableName:
-    Description: The name of the DynamoDB table for global data.
-    Value: !Ref GlobalDynamoDBTable
-
-  JobsTableName:
-    Description: The name of the DynamoDB table for jobs data.
-    Value: !Ref JobsDynamoDBTable
+  tableGlobal:
+    Description: "Name of the table global"
+    Value: !Ref tableGlobal
+  tableJobs:
+    Description: "Name of the table jobs"
+    Value: !Ref tableJobs
