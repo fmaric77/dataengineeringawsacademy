@@ -27,7 +27,7 @@ phases:
           fi
         fi
       - zip -r fmaric-academy-lambda-cf.zip RESOURCES/fmaric-academy-lambda-cf.py
-      - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3-stack --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+      - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - aws s3 cp fmaric-academy-lambda-cf.zip s3://fmaric-academy-scripts-cf
       - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb-stack
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-state-machine-stack --capabilities CAPABILITY_NAMED_IAM
