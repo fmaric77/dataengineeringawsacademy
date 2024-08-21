@@ -23,3 +23,5 @@ phases:
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cf" DynamoDBTableJobsName="fmaric-academy-jobs-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - echo "End Build"
+
+      
