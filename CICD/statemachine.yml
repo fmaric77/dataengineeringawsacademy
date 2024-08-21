@@ -158,7 +158,7 @@ Resources:
                 Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
 
   AcademySNSTopic:
-    Condition: !Not [!Equals [!Ref SNSTopicName, '']]
+    Condition: "CreateSNSTopic"
     Type: 'AWS::SNS::Topic'
     Properties:
       TopicName: !Ref SNSTopicName
@@ -214,11 +214,14 @@ Resources:
           Id: 'StateMachineTrigger'
           RoleArn: !GetAtt StateMachineTriggerRole.Arn
 
+Conditions:
+  CreateSNSTopic: !Not [!Equals [!Ref SNSTopicName, '']]
+
 Outputs:
   LambdaFunction:
     Value: !Ref AcademyLambdaLanding
   StateMachine:
     Value: !Ref AcademyStateMachine
   SNSTopic:
-    Condition: !Not [!Equals [!Ref SNSTopicName, '']]
+    Condition: CreateSNSTopic
     Value: !Ref AcademySNSTopic
