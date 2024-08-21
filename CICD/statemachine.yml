@@ -1,0 +1,224 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create two S3 buckets
+
+Parameters:
+  S3BucketData:
+    Description: Name of the S3 bucket to store data
+    Type: String
+    Default: fmaric-academy-aws-cf
+  S3BucketScripts:
+    Description: Name of the S3 bucket to store scripts
+    Type: String
+    Default: fmaric-academy-aws-cf-scripts
+  
+  Owner:
+    Description: Owner name
+    Type: String
+    Default: fmaric
+
+  DynamoDBTableGlobalName:
+    Description: Name of the DynamoDB table for global data
+    Type: String
+    Default: fmaric-academy-global-cloudf
+
+  DynamoDBTableJobsName:
+    Description: Name of the DynamoDB table for jobs
+    Type: String
+    Default: fmaric-academy-jobs-cloudf
+
+  StateMachineName:
+    Type: String
+    Description: The name of the Step Function state machine
+    Default: fmaric-academy-aws-statemachine-cf
+
+  StateMachineRoleName:
+    Type: String
+    Description: The name of the IAM role for the state machine
+    Default: StepFunctions-fmaric-academy-aws-statemachine-role-cf
+
+  StateMachineTriggerRoleName:
+    Type: String
+    Description: The name of the IAM role for the state machine trigger
+    Default: StepFunctions-fmaric-academy-aws-statemachine-triggerrole-cf
+
+  LambdaLandingName:
+    Type: String
+    Description: The name of the Lambda function
+    Default: fmaric-academy-lambda-cf
+
+  LambdaLandingRoleName:
+    Type: String
+    Description: The name of the IAM role for the Lambda function
+    Default: fmaric-academy-lambda-role-cf
+
+  LambdaLandingUploadUNIXT:
+    Type: String
+    Description: A parameter to force Lambda deployment update
+    Default: $(date +%s)
+
+  SNSTopicName:
+    Type: String
+    Description: The name of the SNS topic
+    Default: fmaric-academy-sns-lambda-cf
+
+  GlueWorkflowName:
+    Type: String
+    Description: The name of the Glue workflow
+    Default: fmaric-workflow-cf
+
+Resources:
+  LambdaLandingRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Ref LambdaLandingRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaLandingPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource: 
+                  - !Sub 'arn:aws:s3:::${S3BucketScripts}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketData}/*'
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:UpdateItem'
+                Resource: 
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}'
+
+  StateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Ref StateMachineRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StateMachinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: 
+                  - !Sub arn:aws:s3:::${S3BucketData}/*
+                  - !Sub arn:aws:s3:::${S3BucketScripts}/*
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                Resource: 
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  StateMachineTriggerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Ref StateMachineTriggerRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: StateMachineTriggerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
+
+  AcademySNSTopic:
+    Condition: !Not [!Equals [!Ref SNSTopicName, '']]
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: !Ref SNSTopicName
+
+  AcademyLambdaLanding:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: !Ref LambdaLandingName
+      Handler: index.handler
+      Role: !GetAtt LambdaLandingRole.Arn
+      Code:
+        S3Bucket: !Ref S3BucketScripts
+        S3Key: !Sub 'lambda/${LambdaLandingName}-${LambdaLandingUploadUNIXT}.zip'
+      Runtime: python3.9
+      Environment:
+        Variables:
+          S3BucketData: !Ref S3BucketData
+          S3BucketScripts: !Ref S3BucketScripts
+          DynamoDBTableGlobalName: !Ref DynamoDBTableGlobalName
+          DynamoDBTableJobsName: !Ref DynamoDBTableJobsName
+          Deployment: !Ref LambdaLandingUploadUNIXT
+      Tags:
+        - Key: Owner
+          Value: !Ref Owner
+
+  AcademyStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Ref StateMachineName
+      RoleArn: !GetAtt StateMachineRole.Arn
+      DefinitionString:
+        Fn::Sub: |
+          {
+            "Comment": "StateMachine for processing",
+            "StartAt": "LambdaInvoke",
+            "States": {
+              "LambdaInvoke": {
+                "Type": "Task",
+                "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}",
+                "End": true
+              }
+            }
+          }
+
+  AcademyStateMachineTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${StateMachineName}-Trigger
+      ScheduleExpression: cron(0 6 * * ? *)
+      State: 'ENABLED'
+      Targets:
+        - Arn: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
+          Id: 'StateMachineTrigger'
+          RoleArn: !GetAtt StateMachineTriggerRole.Arn
+
+Outputs:
+  LambdaFunction:
+    Value: !Ref AcademyLambdaLanding
+  StateMachine:
+    Value: !Ref AcademyStateMachine
+  SNSTopic:
+    Condition: !Not [!Equals [!Ref SNSTopicName, '']]
+    Value: !Ref AcademySNSTopic
