@@ -21,7 +21,14 @@ phases:
           aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
         fi
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-      - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cloudf" DynamoDBTableJobsName="fmaric-academy-jobs-cloudf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+      - |
+        TABLE_NAME_GLOBAL=fmaric-academy-global-cf
+        TABLE_NAME_JOBS=fmaric-academy-jobs-cf
+        TABLE_STATUS_GLOBAL=$(aws dynamodb describe-table --table-name $TABLE_NAME_GLOBAL --query "Table.TableStatus" --output text 2>/dev/null || echo "TABLE_NOT_FOUND")
+        TABLE_STATUS_JOBS=$(aws dynamodb describe-table --table-name $TABLE_NAME_JOBS --query "Table.TableStatus" --output text 2>/dev/null || echo "TABLE_NOT_FOUND")
+        if [ "$TABLE_STATUS_GLOBAL" == "TABLE_NOT_FOUND" ] && [ "$TABLE_STATUS_JOBS" == "TABLE_NOT_FOUND" ]; then
+          aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cf" DynamoDBTableJobsName="fmaric-academy-jobs-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+        else
+          echo "One or both tables already exist. Skipping creation."
+        fi
       - echo "End Build"
-
-      
