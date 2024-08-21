@@ -1,12 +1,10 @@
 version: 0.2
-
 phases:
   install:
     commands:
       - echo "Start Install"
       - echo $(date)
       - echo "End Install"
-
   build:
     commands:
       - echo "Start Build"
@@ -19,7 +17,5 @@ phases:
         fi
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cloudf" DynamoDBTableJobsName="fmaric-academy-jobs-cloudf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
-      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack
-
+      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM
       - echo "End Build"
-      
