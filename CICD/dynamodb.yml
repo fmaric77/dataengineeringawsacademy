@@ -3,9 +3,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   DynamoDBTableGlobalName:
     Type: String
-
+    Description: Name of the DynamoDB table for global data.
+  
   DynamoDBTableJobsName:
     Type: String
+    Description: Name of the DynamoDB table for jobs data.
 
 Resources:
   tableGlobal:
@@ -15,15 +17,30 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "name"
           AttributeType: "S"
+        - AttributeName: "tz"
+          AttributeType: "S"
+        - AttributeName: "method"
+          AttributeType: "S"
+        - AttributeName: "host"
+          AttributeType: "S"
+        - AttributeName: "port"
+          AttributeType: "S"
+        - AttributeName: "prefix"
+          AttributeType: "S"
+        - AttributeName: "url"
+          AttributeType: "S"
+        - AttributeName: "partitions_uri"
+          AttributeType: "S"
+        - AttributeName: "jobs"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-
       Tags:
-        - Key: "Owner: "
+        - Key: "Owner"
           Value: "fmaric"
 
   tableJobs:
@@ -33,6 +50,10 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "table_name"
           AttributeType: "S"
+        - AttributeName: "uri"
+          AttributeType: "S"
+        - AttributeName: "params"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "table_name"
           KeyType: HASH
@@ -40,8 +61,9 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       Tags:
-        - Key: "Owner: "
+        - Key: "Owner"
           Value: "fmaric"
+
 Outputs:
   tableGlobal:
     Description: "Name of the table global"
