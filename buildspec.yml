@@ -26,7 +26,7 @@ phases:
             aws cloudformation wait stack-delete-complete --stack-name fmaric-statemachine-stack
           fi
         fi
-      - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM
+
       - zip -r fmaric-academy-lambda-cf.zip AWS/resources/fmaric-academy-lambda-cf.py
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3-stack
       - aws s3 cp fmaric-academy-lambda-cf.zip s3://fmaric-academy-scripts-cf
