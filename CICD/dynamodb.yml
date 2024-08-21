@@ -19,20 +19,6 @@ Resources:
           AttributeType: "S"
         - AttributeName: "url"
           AttributeType: "S"
-        - AttributeName: "host"
-          AttributeType: "S"
-        - AttributeName: "jobs"
-          AttributeType: "S"
-        - AttributeName: "method"
-          AttributeType: "S"
-        - AttributeName: "partitions_uri"
-          AttributeType: "S"
-        - AttributeName: "port"
-          AttributeType: "S"
-        - AttributeName: "prefix"
-          AttributeType: "S"
-        - AttributeName: "tz"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
           KeyType: HASH
@@ -51,12 +37,6 @@ Resources:
       TableName: !Ref DynamoDBTableJobsName
       AttributeDefinitions:
         - AttributeName: "table_name"
-          AttributeType: "S"
-        - AttributeName: "min_ingestion_dttm"
-          AttributeType: "S"
-        - AttributeName: "params"
-          AttributeType: "S"
-        - AttributeName: "uri"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "table_name"
