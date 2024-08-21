@@ -17,7 +17,14 @@ phases:
         fi
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cloudf" DynamoDBTableJobsName="fmaric-academy-jobs-cloudf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+      - |
+        if aws cloudformation describe-stacks --stack-name fmaric-statemachine-stack; then
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name fmaric-statemachine-stack --query "Stacks[0].StackStatus" --output text)
+          if [ "$STACK_STATUS" == "ROLLBACK_FAILED" ]; then
+            echo "Stack is in ROLLBACK_FAILED state, deleting..."
+            aws cloudformation delete-stack --stack-name fmaric-statemachine-stack
+            aws cloudformation wait stack-delete-complete --stack-name fmaric-statemachine-stack
+          fi
+        fi
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM
       - echo "End Build"
-
-      
