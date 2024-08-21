@@ -51,10 +51,11 @@ Parameters:
     Description: The name of the IAM role for the Lambda function
     Default: fmaric-academy-lambda-role-cf
 
-  LambdaLandingUploadUNIXT:
+ LambdaLandingUploadUNIXT:
     Type: String
     Description: A parameter to force Lambda deployment update
-    Default: ""
+    Default: $(date +%s)
+
 
   SNSTopicName:
     Type: String
@@ -171,7 +172,7 @@ Resources:
       Role: !GetAtt LambdaLandingRole.Arn
       Code:
         S3Bucket: !Ref S3BucketScripts
-        S3Key: !Sub 'lambda/${LambdaLandingName}-${LambdaLandingUploadUNIXT}.zip'
+        S3Key: !Sub "fmaric-academy-lambda-cf-${LambdaLandingUploadUNIXT}.zip"
       Runtime: python3.9
       Environment:
         Variables:
