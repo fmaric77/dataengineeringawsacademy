@@ -50,10 +50,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "table_name"
           AttributeType: "S"
-        - AttributeName: "uri"
-          AttributeType: "S"
-        - AttributeName: "params"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "table_name"
           KeyType: HASH
