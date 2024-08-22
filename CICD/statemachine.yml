@@ -163,7 +163,7 @@ Resources:
     Properties:
       TopicName: !Ref SNSTopicName
 
-AcademyLambdaLanding:
+  AcademyLambdaLanding:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: !Ref LambdaLandingName
@@ -188,7 +188,7 @@ AcademyLambdaLanding:
         - Key: Owner
           Value: !Ref Owner
 
-AcademyStateMachine:
+  AcademyStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
       StateMachineName: !Ref StateMachineName
