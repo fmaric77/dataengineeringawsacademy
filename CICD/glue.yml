@@ -57,6 +57,7 @@ Resources:
                   - s3:*
                   - dynamodb:*
                   - glue:*
+                  - logs:*
                 Resource: '*'
 
   GlueWorkflow:
@@ -87,9 +88,9 @@ Resources:
         Name: glueetl
         ScriptLocation: !Sub s3://${S3BucketScripts}/glue.py
         PythonVersion: 3
-      DefaultArguments:
-        "--TempDir": !Sub s3://${S3BucketData}/temp/
-        "--job-language": "python"
+      # DefaultArguments:
+      #   "--TempDir": !Sub s3://${S3BucketData}/temp/
+      #   "--job-language": "python"
       GlueVersion: "3.0"
       WorkerType: G.1X
       NumberOfWorkers: 10
@@ -102,8 +103,6 @@ Resources:
       Name: !Ref GlueCrawlerLandingName
       Role: !GetAtt GlueJobRole.Arn
       DatabaseName: !Ref GlueDatabaseLandingName
-      RecrawlPolicy:
-        RecrawlBehavior: CRAWL_EVERYTHING
       Targets:
         S3Targets:
           - Path: !Sub s3://${S3BucketData}/imdb/landing/
@@ -127,42 +126,40 @@ Resources:
   GlueCrawlerLandingTrigger:
     Type: AWS::Glue::Trigger
     Properties:
-      Name: !Sub "${GlueCrawlerLandingTriggerName}-new"
+      Name: !Ref GlueCrawlerLandingTriggerName
       Type: SCHEDULED
-      Schedule: "cron(0 12 * * ? *)"
+      Schedule: "cron(0 4 * * ? *)"
+      StartOnCreation: True
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
       WorkflowName: !Ref GlueWorkflow
-      StartOnCreation: true
 
   GlueJobTrigger:
     Type: AWS::Glue::Trigger
     Properties:
       Name: !Ref GlueJobTriggerName
       Type: CONDITIONAL
+      StartOnCreation: True
       Actions:
-        - JobName: !Ref GlueJobName
+        - JobName: !Ref GlueJob
       Predicate:
-        Logical: ANY
         Conditions:
           - LogicalOperator: EQUALS
-            CrawlerName: !Ref GlueCrawlerLandingName
+            CrawlerName: !Ref GlueCrawlerLanding
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      StartOnCreation: true
 
   GlueCrawlerDatalakeTrigger:
     Type: AWS::Glue::Trigger
     Properties:
       Name: !Ref GlueCrawlerDatalakeTriggerName
       Type: CONDITIONAL
+      StartOnCreation: True
       Actions:
-        - CrawlerName: !Ref GlueCrawlerDatalakeName
+        - CrawlerName: !Ref GlueCrawlerDatalake
       Predicate:
-        Logical: ANY
         Conditions:
           - LogicalOperator: EQUALS
-            CrawlerName: !Ref GlueCrawlerLandingName
-            CrawlState: SUCCEEDED
+            JobName: !Ref GlueJobName
+            State: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      StartOnCreation: true
