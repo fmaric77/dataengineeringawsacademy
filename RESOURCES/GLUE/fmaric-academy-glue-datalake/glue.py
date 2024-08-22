@@ -18,37 +18,37 @@ job.init(args['JOB_NAME'], args)
 
 # Load data from AWS Glue Data Catalog
 name_basics_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="name_basics",
     transformation_ctx="name_basics_df"
 ).toDF()
 
 title_basics_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="title_basics",
     transformation_ctx="title_basics_df"
 ).toDF()
 
 title_crew_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="title_crew",
     transformation_ctx="title_crew_df"
 ).toDF()
 
 title_episode_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="title_episode",
     transformation_ctx="title_episode_df"
 ).toDF()
 
 title_principals_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="title_principals",
     transformation_ctx="title_principals_df"
 ).toDF()
 
 title_ratings_df = glueContext.create_dynamic_frame.from_catalog(
-    database="fmaric-academy-aws-landing",
+    database="fmaric-academy-aws-landing-cf",
     table_name="title_ratings",
     transformation_ctx="title_ratings_df"
 ).toDF()
@@ -66,12 +66,12 @@ title_principals_df = add_datalake_columns(title_principals_df)
 title_ratings_df = add_datalake_columns(title_ratings_df)
 
 # Write data to S3 in parquet format, partitioned by datalake_date
-name_basics_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/name_basics/")
-title_basics_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/title_basics/")
-title_crew_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/title_crew/")
-title_episode_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/title_episode/")
-title_principals_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/title_principals/")
-title_ratings_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws/datalake/title_ratings/")
+name_basics_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/name_basics/")
+title_basics_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/title_basics/")
+title_crew_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/title_crew/")
+title_episode_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/title_episode/")
+title_principals_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/title_principals/")
+title_ratings_df.write.partitionBy("datalake_date").mode("overwrite").parquet("s3://fmaric-academy-aws-cf/datalake/title_ratings/")
 
 # Commit the job
 job.commit()
