@@ -38,13 +38,6 @@ phases:
         else
           echo "Stack does not exist, proceeding with deployment..."
         fi
-      - |
-        if aws glue get-trigger --name fmaric-landing-crawler-trigger-cf; then
-          echo "Trigger fmaric-landing-crawler-trigger-cf exists, deleting..."
-          aws glue delete-trigger --name fmaric-landing-crawler-trigger-cf
-        else
-          echo "Trigger fmaric-landing-crawler-trigger-cf does not exist, proceeding with deployment..."
-        fi
       - aws cloudformation deploy --template-file CICD/glue.yml --stack-name fmaric-glue --parameter-overrides S3BucketData="fmaric-academy-aws-cf" S3BucketScripts="fmaric-academy-aws-cf-scripts" GlueJobName="fmaric-glue-cf" GlueJobRoleName="fmaric-glue-role-cf" GlueDatabaseLandingName="fmaric-academy-aws-landing-cf" GlueDatabaseDatalakeName="fmaric-academy-aws-datalake-cf" GlueCrawlerLandingTriggerName="fmaric-landing-crawler-trigger-cf" GlueCrawlerLandingName="fmaric-landing-crawler-cf" GlueCrawlerDatalakeTriggerName="fmaric-datalake-crawler-trigger-cf" GlueCrawlerDatalakeName="fmaric-datalake-crawler-cf" GlueJobTriggerName="fmaric-glue-trigger-cf" GlueWorkflowName="fmaric-workflow-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - echo "End Build"
   post_build:

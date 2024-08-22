@@ -128,15 +128,10 @@ Resources:
     Type: AWS::Glue::Trigger
     Properties:
       Name: !Sub "${GlueCrawlerLandingTriggerName}-new"
-      Type: CONDITIONAL
+      Type: SCHEDULED
+      Schedule: "cron(0 12 * * ? *)"
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
-      Predicate:
-        Logical: ANY
-        Conditions:
-          - LogicalOperator: EQUALS
-            CrawlerName: !Ref GlueCrawlerLandingName
-            CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
       StartOnCreation: true
 
