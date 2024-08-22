@@ -1,5 +1,3 @@
-import json
-import awswrangler
 import boto3
 from boto3.dynamodb.conditions import Key
 from datetime import datetime
