@@ -136,7 +136,6 @@ Resources:
             CrawlerName: !Ref GlueCrawlerLandingName
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
 
   GlueJobTrigger:
     Type: AWS::Glue::Trigger
@@ -152,7 +151,6 @@ Resources:
             CrawlerName: !Ref GlueCrawlerLandingName
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
 
   GlueCrawlerDatalakeTrigger:
     Type: AWS::Glue::Trigger
@@ -168,4 +166,3 @@ Resources:
             JobName: !Ref GlueJobName
             State: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
