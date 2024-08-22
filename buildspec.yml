@@ -9,7 +9,6 @@ phases:
     commands:
       - echo "Start Build"
       - echo $(date)
-      - |
       - aws cloudformation deploy --template-file CICD/s3.yml --stack-name fmaric-s3 --parameter-overrides S3BucketData="fmaric-data-bucket-cf" S3BucketScripts="fmaric-scripts-bucket-cf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       # - aws cloudformation deploy --template-file CICD/dynamodb.yml --stack-name fmaric-dynamodb --parameter-overrides DynamoDBTableGlobalName="fmaric-academy-global-cloudf" DynamoDBTableJobsName="fmaric-academy-jobs-cloudf" --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
       - |
@@ -28,21 +27,34 @@ phases:
       - zip -j lambda_$TIMESTAMP.zip RESOURCES/index.py
       - aws s3 cp lambda_$TIMESTAMP.zip s3://fmaric-academy-aws-cf-scripts/lambda_$TIMESTAMP.zip
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaLandingUploadUNIXT=$TIMESTAMP
-
-      - aws cloudformation deploy --template-file CICD/glue.yml --stack-name fmaric-glue
-        --parameter-overrides
-          S3BucketData="fmaric-academy-aws-data-cf" 
-          S3BucketScripts="fmaric-academy-aws-scripts-cf"
-          GlueJobName="fmaric-glue-cf"
-          GlueJobRoleName="fmaric-glue-role-cf"
-          GlueDatabaseLandingName="fmaric-academy-aws-landing-cf"
-          GlueDatabaseDatalakeName="fmaric-academy-aws-datalake-cf"
-          GlueCrawlerLandingTriggerName="fmaric-landing-crawler-trigger-cf"
-          GlueCrawlerLandingName="fmaric-landing-crawler-cf"
-          GlueCrawlerDatalakeTriggerName="fmaric-datalake-crawler-trigger-cf"
-          GlueCrawlerDatalakeName="fmaric-datalake-crawler-cf"
-          GlueJobTriggerName="fmaric-glue-trigger-cf"
-          GlueWorkflowName="fmaric-workflow-cf"
-        --capabilities CAPABILITY_NAMED_IAM
+      - |
+        if aws cloudformation describe-stacks --stack-name fmaric-glue; then
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name fmaric-glue --query "Stacks[0].StackStatus" --output text)
+          if [ "$STACK_STATUS" == "ROLLBACK_FAILED" ] || [ "$STACK_STATUS" == "ROLLBACK_COMPLETE" ]; then
+            echo "Stack is in $STACK_STATUS state, deleting..."
+            aws cloudformation delete-stack --stack-name fmaric-glue
+            aws cloudformation wait stack-delete-complete --stack-name fmaric-glue
+          fi
+        else
+          echo "Stack does not exist, proceeding with deployment..."
+        fi
+      - aws cloudformation deploy --template-file CICD/glue.yml --stack-name fmaric-glue \
+        --parameter-overrides \
+          S3BucketData="fmaric-academy-aws-data-cf" \
+          S3BucketScripts="fmaric-academy-aws-scripts-cf" \
+          GlueJobName="fmaric-glue-cf" \
+          GlueJobRoleName="fmaric-glue-role-cf" \
+          GlueDatabaseLandingName="fmaric-academy-aws-landing-cf" \
+          GlueDatabaseDatalakeName="fmaric-academy-aws-datalake-cf" \
+          GlueCrawlerLandingTriggerName="fmaric-landing-crawler-trigger-cf" \
+          GlueCrawlerLandingName="fmaric-landing-crawler-cf" \
+          GlueCrawlerDatalakeTriggerName="fmaric-datalake-crawler-trigger-cf" \
+          GlueCrawlerDatalakeName="fmaric-datalake-crawler-cf" \
+          GlueJobTriggerName="fmaric-glue-trigger-cf" \
+          GlueWorkflowName="fmaric-workflow-cf" \
+        --capabilities CAPABILITY_NAMED_IAM \
         --no-fail-on-empty-changeset
       - echo "End Build"
+  post_build:
+    commands:
+      - echo "Build completed"
