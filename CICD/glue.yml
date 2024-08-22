@@ -1,0 +1,160 @@
+Parameters:
+  S3BucketData:
+    Type: String
+
+  S3BucketScripts:
+    Type: String
+
+  GlueJobName:
+    Type: String
+
+  GlueJobRoleName:
+    Type: String
+
+  GlueDatabaseLandingName:
+    Type: String
+
+  GlueDatabaseDatalakeName:
+    Type: String
+
+  GlueCrawlerLandingTriggerName:
+    Type: String
+    
+  GlueCrawlerLandingName:
+    Type: String
+
+  GlueCrawlerDatalakeTriggerName:
+    Type: String
+
+  GlueCrawlerDatalakeName:
+    Type: String
+
+  GlueJobTriggerName:
+    Type: String
+
+  GlueWorkflowName:
+    Type: String
+
+Resources:
+  GlueJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref GlueJobRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: GlueJobPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - dynamodb:*
+                  - glue:*
+                Resource: '*'
+
+  GlueWorkflow:
+    Type: AWS::Glue::Workflow
+    Properties:
+      Name: !Ref GlueWorkflowName
+
+  LandingDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref 'AWS::AccountId'
+      DatabaseInput:
+        Name: !Ref GlueDatabaseLandingName
+  
+  DatalakeDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref 'AWS::AccountId'
+      DatabaseInput:
+        Name: !Ref GlueDatabaseDatalakeName
+  
+  GlueJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: !Ref GlueJobName
+      Role: !GetAtt GlueJobRole.Arn
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub s3://${S3BucketScripts}/glue.py
+        PythonVersion: 3
+      DefaultArguments:
+        "--TempDir": !Sub s3://${S3BucketData}/temp/
+        "--job-language": "python"
+      GlueVersion: "3.0"
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 400
+      MaxRetries: 3
+
+  GlueCrawlerLanding:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Ref GlueCrawlerLandingName
+      Role: !GetAtt GlueJobRole.Arn
+      DatabaseName: !Ref GlueDatabaseLandingName
+      Targets:
+        S3Targets:
+          - Path: !Sub s3://${S3BucketData}/imdb/landing/
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: DEPRECATE_IN_DATABASE
+
+  GlueCrawlerDatalake:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Ref GlueCrawlerDatalakeName
+      Role: !GetAtt GlueJobRole.Arn
+      DatabaseName: !Ref GlueDatabaseDatalakeName
+      Targets:
+        S3Targets:
+          - Path: !Sub s3://${S3BucketData}/datalake/
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: DEPRECATE_IN_DATABASE
+
+  GlueCrawlerLandingTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name: !Ref GlueCrawlerLandingTriggerName
+      Type: ON_DEMAND
+      Actions:
+        - CrawlerName: !Ref GlueCrawlerLandingName
+      WorkflowName: !Ref GlueWorkflow
+
+  GlueJobTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name: !Ref GlueJobTriggerName
+      Type: CONDITIONAL
+      Actions:
+        - JobName: !Ref GlueJobName
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            CrawlerName: !Ref GlueCrawlerLandingName
+            CrawlState: SUCCEEDED
+      WorkflowName: !Ref GlueWorkflow
+
+  GlueCrawlerDatalakeTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name: !Ref GlueCrawlerDatalakeTriggerName
+      Type: CONDITIONAL
+      Actions:
+        - CrawlerName: !Ref GlueCrawlerDatalakeName
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            JobName: !Ref GlueJobName
+            State: SUCCEEDED
+      WorkflowName: !Ref GlueWorkflow
