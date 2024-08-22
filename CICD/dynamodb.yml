@@ -17,8 +17,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "name"
           AttributeType: "S"
-        - AttributeName: "url"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "name"
           KeyType: HASH
