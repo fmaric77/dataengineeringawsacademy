@@ -188,7 +188,7 @@ AcademyLambdaLanding:
         - Key: Owner
           Value: !Ref Owner
 
-  AcademyStateMachine:
+AcademyStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
       StateMachineName: !Ref StateMachineName
