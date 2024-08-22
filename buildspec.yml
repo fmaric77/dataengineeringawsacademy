@@ -25,6 +25,6 @@ phases:
         fi
       - TIMESTAMP=$(date +%s)
       - echo Generated timestamp $TIMESTAMP
-      - zip -j lambda_$TIMESTAMP.zip RESOURCES/fmaric-academy-lambda-cf.py
+      - zip -j lambda_$TIMESTAMP.zip RESOURCES/index.py
       - aws s3 cp lambda_$TIMESTAMP.zip s3://fmaric-academy-aws-cf-scripts/lambda_$TIMESTAMP.zip
       - aws cloudformation deploy --template-file CICD/statemachine.yml --stack-name fmaric-statemachine-stack --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaLandingUploadUNIXT=$TIMESTAMP
