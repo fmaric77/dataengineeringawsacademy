@@ -125,7 +125,7 @@ Resources:
   GlueCrawlerLandingTrigger:
     Type: AWS::Glue::Trigger
     Properties:
-      Name: !Ref GlueCrawlerLandingTriggerName
+      Name: !Sub "${GlueCrawlerLandingTriggerName}-new"
       Type: CONDITIONAL
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
