@@ -192,13 +192,52 @@ Resources:
       DefinitionString:
         Fn::Sub: |
           {
-            "Comment": "StateMachine for processing",
-            "StartAt": "LambdaInvoke",
+            "Comment": "A description of my state machine",
+            "StartAt": "Scan",
             "States": {
-              "LambdaInvoke": {
+              "Scan": {
                 "Type": "Task",
-                "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}",
-                "End": true
+                "Parameters": {
+                  "TableName": "${DynamoDBTableJobsName}"
+                },
+                "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+                "Next": "Map"
+              },
+              "Map": {
+                "Type": "Map",
+                "ItemProcessor": {
+                  "ProcessorConfig": {
+                    "Mode": "INLINE"
+                  },
+                  "StartAt": "GetAndUpdate",
+                  "States": {
+                    "GetAndUpdate": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::lambda:invoke",
+                      "OutputPath": "$.Payload",
+                      "Parameters": {
+                        "Payload.$": "$",
+                        "FunctionName": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}:$LATEST"
+                      },
+                      "Retry": [
+                        {
+                          "ErrorEquals": [
+                            "Lambda.ServiceException",
+                            "Lambda.AWSLambdaException",
+                            "Lambda.SdkClientException",
+                            "Lambda.TooManyRequestsException"
+                          ],
+                          "IntervalSeconds": 1,
+                          "MaxAttempts": 3,
+                          "BackoffRate": 2
+                        }
+                      ],
+                      "End": true
+                    }
+                  }
+                },
+                "End": true,
+                "ItemsPath": "$.Items"
               }
             }
           }
