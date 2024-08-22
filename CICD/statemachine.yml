@@ -163,16 +163,20 @@ Resources:
     Properties:
       TopicName: !Ref SNSTopicName
 
-  AcademyLambdaLanding:
+AcademyLambdaLanding:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: !Ref LambdaLandingName
-      Handler: index.handler
+      Handler: lambda_function.lambda_handler
       Role: !GetAtt LambdaLandingRole.Arn
       Code:
         S3Bucket: !Ref S3BucketScripts
         S3Key: !Sub "lambda_${LambdaLandingUploadUNIXT}.zip"
       Runtime: python3.9
+      MemorySize: 1024
+      Timeout: 900
+      Layers:
+        - arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python312:12
       Environment:
         Variables:
           S3BucketData: !Ref S3BucketData
