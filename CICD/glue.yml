@@ -126,10 +126,17 @@ Resources:
     Type: AWS::Glue::Trigger
     Properties:
       Name: !Ref GlueCrawlerLandingTriggerName
-      Type: ON_DEMAND
+      Type: CONDITIONAL
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
+      Predicate:
+        Logical: ANY
+        Conditions:
+          - LogicalOperator: EQUALS
+            CrawlerName: !Ref GlueCrawlerLandingName
+            CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
+      State: ACTIVATED
 
   GlueJobTrigger:
     Type: AWS::Glue::Trigger
@@ -139,11 +146,13 @@ Resources:
       Actions:
         - JobName: !Ref GlueJobName
       Predicate:
+        Logical: ANY
         Conditions:
           - LogicalOperator: EQUALS
             CrawlerName: !Ref GlueCrawlerLandingName
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
+      State: ACTIVATED
 
   GlueCrawlerDatalakeTrigger:
     Type: AWS::Glue::Trigger
@@ -153,9 +162,10 @@ Resources:
       Actions:
         - CrawlerName: !Ref GlueCrawlerDatalakeName
       Predicate:
+        Logical: ANY
         Conditions:
           - LogicalOperator: EQUALS
             JobName: !Ref GlueJobName
             State: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      
+      State: ACTIVATED
