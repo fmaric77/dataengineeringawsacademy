@@ -102,6 +102,8 @@ Resources:
       Name: !Ref GlueCrawlerLandingName
       Role: !GetAtt GlueJobRole.Arn
       DatabaseName: !Ref GlueDatabaseLandingName
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
       Targets:
         S3Targets:
           - Path: !Sub s3://${S3BucketData}/imdb/landing/
