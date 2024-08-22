@@ -84,3 +84,6 @@ def lambda_handler(event, context):
 
     updated_row = 'min_ingestion_dttm: ' +str(latest_dttm)
     update(table_name, updated_row, Config.table_jobs)
+
+
+    
