@@ -171,7 +171,7 @@ Resources:
       Role: !GetAtt LambdaLandingRole.Arn
       Code:
         S3Bucket: !Ref S3BucketScripts
-        S3Key: !Sub "fmaric-academy-lambda-cf-${LambdaLandingUploadUNIXT}.zip"
+        S3Key: !Sub "lambda_${LambdaLandingUploadUNIXT}.zip"
       Runtime: python3.9
       Environment:
         Variables:
