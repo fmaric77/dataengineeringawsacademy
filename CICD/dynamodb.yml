@@ -36,8 +36,6 @@ Resources:
       KeySchema:
         - AttributeName: "name"
           KeyType: HASH
-        - AttributeName: "url"
-          KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
