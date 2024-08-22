@@ -138,6 +138,7 @@ Resources:
             CrawlerName: !Ref GlueCrawlerLandingName
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
+      StartOnCreation: true
 
   GlueJobTrigger:
     Type: AWS::Glue::Trigger
@@ -153,6 +154,7 @@ Resources:
             CrawlerName: !Ref GlueCrawlerLandingName
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
+      StartOnCreation: true
 
   GlueCrawlerDatalakeTrigger:
     Type: AWS::Glue::Trigger
@@ -165,6 +167,7 @@ Resources:
         Logical: ANY
         Conditions:
           - LogicalOperator: EQUALS
-            JobName: !Ref GlueJobName
-            State: SUCCEEDED
+            CrawlerName: !Ref GlueCrawlerLandingName
+            CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
+      StartOnCreation: true
