@@ -9,8 +9,8 @@ from dataclasses import dataclass
 class Config:
     dynamodb = boto3.resource('dynamodb')
     s3_client = boto3.client('s3')
-    table_global = dynamodb.Table(os.environ['table_name_global'])
-    table_jobs = dynamodb.Table(os.environ['table_name_jobs'])
+    table_global = dynamodb.Table(os.environ['DynamoDBTableGlobalName'])
+    table_jobs = dynamodb.Table(os.environ['DynamoDBTableJobsName'])
     dt_format = "%Y%m%dT%H%M%S.%f"
     
     ##get base urls
@@ -38,7 +38,7 @@ def fetchPartitions(table_name, url):
 ##update column
 def update(table_name, updated_value, table):
     table.update_item(
-        TableName = os.environ['table_name_jobs'],
+        TableName = os.environ['DynamoDBTableJobsName'],
         Key = {
             'table_name': table_name
         },
@@ -60,7 +60,7 @@ def fetchPartitionsData(table_name, url_dict, partition_name):
 ##save bytes data to s3 bucket
 def saveToS3(partition_data, table_name, partition_name):
     try:
-        Config.s3_client.put_object(Bucket=os.environ['bucket_name'], Key=f'imdb/landing/{table_name}/{partition_name}.json', Body=partition_data, ContentType='application/json')
+        Config.s3_client.put_object(Bucket=os.environ['S3BucketData'], Key=f'imdb/landing/{table_name}/{partition_name}.json', Body=partition_data, ContentType='application/json')
     except Exception as e:
         print(e)
 
@@ -82,6 +82,3 @@ def lambda_handler(event, context):
 
     updated_row = 'min_ingestion_dttm: ' +str(latest_dttm)
     update(table_name, updated_row, Config.table_jobs)
-
-
-    
