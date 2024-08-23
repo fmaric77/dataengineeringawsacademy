@@ -260,7 +260,7 @@ Resources:
       Targets:
         - Arn: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
           Id: 'StateMachineTrigger'
-          RoleArn: !GetAtt StateMachineTriggerRole.Arn
+          RoleArn: !GetAtt StateMachineTriggerRoleName.Arn
 
 Conditions:
   CreateSNSTopic: !Not [!Equals [!Ref SNSTopicName, '']]
