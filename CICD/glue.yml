@@ -144,11 +144,10 @@ Resources:
       Name: !Ref GlueCrawlerLandingTriggerName
       Type: SCHEDULED
       StartOnCreation: True
-      Schedule: "cron(0 6 * * ? *)"
+      Schedule: "cron(0 6 * * ? *)"  
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
 
   GlueJobTrigger:
     Type: AWS::Glue::Trigger
@@ -164,7 +163,6 @@ Resources:
             CrawlerName: !Ref GlueCrawlerLanding
             CrawlState: SUCCEEDED
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
 
   GlueCrawlerDatalakeTrigger:
     Type: AWS::Glue::Trigger
@@ -180,4 +178,4 @@ Resources:
       Actions:
         - CrawlerName: !Ref GlueCrawlerDatalakeName
       WorkflowName: !Ref GlueWorkflow
-      State: ACTIVATED
+
