@@ -20,12 +20,12 @@ Parameters:
   DynamoDBTableGlobalName:
     Description: Name of the DynamoDB table for global data
     Type: String
-    Default: fmaric-academy-global-cf
+    Default: fmaric-academy-global-cloudf
 
   DynamoDBTableJobsName:
     Description: Name of the DynamoDB table for jobs
     Type: String
-    Default: fmaric-academy-jobs-cf
+    Default: fmaric-academy-jobs-cloudf
 
   StateMachineName:
     Type: String
