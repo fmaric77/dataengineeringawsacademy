@@ -66,6 +66,26 @@ Parameters:
     Description: The name of the Glue workflow
     Default: fmaric-workflow-cf
 
+  SNSTopicName:
+    Type: String
+    Description: The name of the SNS topic
+    Default: fmaric-academy-sns-lambda-cf
+
+  SNSTopicARN:
+    Type: String
+    Description: The name of SNSTopic
+    Default: arn:aws:sns:eu-central-1:381492288052:fmaric-academy-sns-lambda-cf
+
+  TopicRegion:
+    Type: String
+    Description: The name of Topic region
+    Default: eu-central-1
+
+  Email:
+    Type: String
+    Description: The e-mail address
+    Default: fmaric77@gmail.com
+
 Resources:
   LambdaLandingRole:
     Type: 'AWS::IAM::Role'
@@ -98,6 +118,18 @@ Resources:
                 Resource: 
                   - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}'
                   - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}'
+
+  AcademySNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: !Ref SNSTopicName
+
+  SnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      Protocol: 'email'
+      Endpoint: !Ref Email
+      TopicArn: !Ref AcademySNSTopic
 
   StateMachineRole:
     Type: 'AWS::IAM::Role'
@@ -135,27 +167,11 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "*"
-
-  StateMachineTriggerRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Ref StateMachineTriggerRoleName
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: events.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: StateMachineTriggerPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
               - Effect: Allow
                 Action:
-                  - 'states:StartExecution'
-                Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
+                  - sns:Publish
+                Resource:
+                  - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${SNSTopicName}
 
   AcademySNSTopic:
     Condition: "CreateSNSTopic"
