@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create two S3 buckets
+Description: CloudFormation template to create two S3 buckets and other resources
 
 Parameters:
   S3BucketData:
@@ -136,10 +136,13 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:Scan
+                  - dynamodb:GetItem
+                  - dynamodb:Query
                   - lambda:InvokeFunction
                   - sns:Publish
                 Resource:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}
                   - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}
                   - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${SNSTopicName}
 
@@ -289,4 +292,3 @@ Outputs:
   SNSTopicArn:
     Description: ARN of the SNS Topic
     Value: !Ref AcademySNSTopic
-
