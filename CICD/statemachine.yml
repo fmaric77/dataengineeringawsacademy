@@ -178,7 +178,7 @@ Resources:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: !Ref LambdaLandingName
-      Handler: lambda_function.lambda_handler
+      Handler: index.lambda_handler
       Role: !GetAtt LambdaLandingRole.Arn
       Code:
         S3Bucket: !Ref S3BucketScripts
