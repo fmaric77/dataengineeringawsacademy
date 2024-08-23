@@ -66,11 +66,6 @@ Parameters:
     Description: The name of the Glue workflow
     Default: fmaric-workflow-cf
 
-  SNSTopicName:
-    Type: String
-    Description: The name of the SNS topic
-    Default: fmaric-academy-sns-lambda-cf
-
   SNSTopicARN:
     Type: String
     Description: The name of SNSTopic
@@ -172,12 +167,6 @@ Resources:
                   - sns:Publish
                 Resource:
                   - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${SNSTopicName}
-
-  AcademySNSTopic:
-    Condition: "CreateSNSTopic"
-    Type: 'AWS::SNS::Topic'
-    Properties:
-      TopicName: !Ref SNSTopicName
 
   AcademyLambdaLanding:
     Type: 'AWS::Lambda::Function'
