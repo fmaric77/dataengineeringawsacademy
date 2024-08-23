@@ -1,41 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create AWS Glue Jobs, Crawlers, and Triggers with a defined workflow
+
 Parameters:
   S3BucketData:
+    Description: The name of the S3 bucket for storing data
     Type: String
 
   S3BucketScripts:
+    Description: The name of the S3 bucket for storing scripts
     Type: String
 
   GlueJobName:
+    Description: The name of the Glue Job
     Type: String
 
   GlueJobRoleName:
+    Description: The name of the IAM role for the Glue Job
     Type: String
 
   GlueDatabaseLandingName:
+    Description: The name of the Glue Database for the landing zone
     Type: String
 
   GlueDatabaseDatalakeName:
+    Description: The name of the Glue Database for the datalake
     Type: String
 
   GlueCrawlerLandingTriggerName:
+    Description: The name of the Glue Crawler Trigger for the landing zone
     Type: String
-    
+
   GlueCrawlerLandingName:
+    Description: The name of the Glue Crawler for the landing zone
     Type: String
 
   GlueCrawlerDatalakeTriggerName:
+    Description: The name of the Glue Crawler Trigger for the datalake
     Type: String
 
   GlueCrawlerDatalakeName:
+    Description: The name of the Glue Crawler for the datalake
     Type: String
 
   GlueJobTriggerName:
+    Description: The name of the Glue Job Trigger
     Type: String
 
   GlueWorkflowName:
+    Description: The name of the workflow 
     Type: String
 
 Resources:
+  GlueWorkflow:
+    Type: AWS::Glue::Workflow
+    Properties:
+      Name: !Ref GlueWorkflowName
+
   GlueJobRole:
     Type: AWS::IAM::Role
     Properties:
@@ -60,42 +80,19 @@ Resources:
                   - logs:*
                 Resource: '*'
 
-  GlueWorkflow:
-    Type: AWS::Glue::Workflow
-    Properties:
-      Name: !Ref GlueWorkflowName
-
   LandingDatabase:
     Type: AWS::Glue::Database
     Properties:
-      CatalogId: !Ref 'AWS::AccountId'
       DatabaseInput:
         Name: !Ref GlueDatabaseLandingName
-  
+      CatalogId: !Ref AWS::AccountId
+ 
   DatalakeDatabase:
     Type: AWS::Glue::Database
     Properties:
-      CatalogId: !Ref 'AWS::AccountId'
       DatabaseInput:
         Name: !Ref GlueDatabaseDatalakeName
-  
-  GlueJob:
-    Type: AWS::Glue::Job
-    Properties:
-      Name: !Ref GlueJobName
-      Role: !GetAtt GlueJobRole.Arn
-      Command:
-        Name: glueetl
-        ScriptLocation: !Sub s3://${S3BucketScripts}/glue.py
-        PythonVersion: 3
-      # DefaultArguments:
-      #   "--TempDir": !Sub s3://${S3BucketData}/temp/
-      #   "--job-language": "python"
-      GlueVersion: "3.0"
-      WorkerType: G.1X
-      NumberOfWorkers: 10
-      Timeout: 400
-      MaxRetries: 3
+      CatalogId: !Ref AWS::AccountId
 
   GlueCrawlerLanding:
     Type: AWS::Glue::Crawler
@@ -123,13 +120,31 @@ Resources:
         UpdateBehavior: UPDATE_IN_DATABASE
         DeleteBehavior: DEPRECATE_IN_DATABASE
 
+  GlueJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: !Ref GlueJobName
+      Role: !Ref GlueJobRoleName
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub s3://${S3BucketScripts}/glu_script.py
+        PythonVersion: '3'
+      DefaultArguments:
+          "--TempDir": !Sub s3://${S3BucketData}/temp/
+          "--job-language": "python"
+          "--additional-python-modules": "gs_now"
+      GlueVersion: '3.0'
+      WorkerType: G.1X
+      NumberOfWorkers: 10
+      Timeout: 2880
+
   GlueCrawlerLandingTrigger:
     Type: AWS::Glue::Trigger
     Properties:
       Name: !Ref GlueCrawlerLandingTriggerName
       Type: SCHEDULED
-      Schedule: "cron(0 4 * * ? *)"
       StartOnCreation: True
+      Schedule: "cron(0 6 * * ? *)"  
       Actions:
         - CrawlerName: !Ref GlueCrawlerLandingName
       WorkflowName: !Ref GlueWorkflow
@@ -155,11 +170,16 @@ Resources:
       Name: !Ref GlueCrawlerDatalakeTriggerName
       Type: CONDITIONAL
       StartOnCreation: True
-      Actions:
-        - CrawlerName: !Ref GlueCrawlerDatalake
       Predicate:
         Conditions:
           - LogicalOperator: EQUALS
             JobName: !Ref GlueJobName
             State: SUCCEEDED
+      Actions:
+        - CrawlerName: !Ref GlueCrawlerDatalakeName
       WorkflowName: !Ref GlueWorkflow
+
+# Outputs:
+#   WorkflowName:
+#     Description: Name of the Glue Workflow
+#     Value: !Ref GlueJobTriggerName
