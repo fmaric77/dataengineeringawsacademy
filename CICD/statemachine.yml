@@ -5,12 +5,13 @@ Parameters:
   S3BucketData:
     Description: Name of the S3 bucket to store data
     Type: String
-    Default: fmaric-academy-aws-cf
+    Default: fmaric-academy-aws-cf-data
+
   S3BucketScripts:
     Description: Name of the S3 bucket to store scripts
     Type: String
     Default: fmaric-academy-aws-cf-scripts
-  
+
   Owner:
     Description: Owner name
     Type: String
@@ -19,12 +20,12 @@ Parameters:
   DynamoDBTableGlobalName:
     Description: Name of the DynamoDB table for global data
     Type: String
-    Default: fmaric-academy-global-cloudf
+    Default: fmaric-academy-global-cf
 
   DynamoDBTableJobsName:
     Description: Name of the DynamoDB table for jobs
     Type: String
-    Default: fmaric-academy-jobs-cloudf
+    Default: fmaric-academy-jobs-cf
 
   StateMachineName:
     Type: String
@@ -68,12 +69,12 @@ Parameters:
 
   SNSTopicARN:
     Type: String
-    Description: The name of SNSTopic
+    Description: The ARN of the SNS topic
     Default: arn:aws:sns:eu-central-1:381492288052:fmaric-academy-sns-lambda-cf
 
   TopicRegion:
     Type: String
-    Description: The name of Topic region
+    Description: The region of the SNS topic
     Default: eu-central-1
 
   Email:
@@ -82,6 +83,11 @@ Parameters:
     Default: fmaric77@gmail.com
 
 Resources:
+  AcademySNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: !Ref SNSTopicName
+      
   LambdaLandingRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -92,39 +98,24 @@ Resources:
           - Effect: Allow
             Principal:
               Service: lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: LambdaLandingPolicy
+        - PolicyName: LambdaAccessPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - 's3:GetObject'
-                  - 's3:PutObject'
-                Resource: 
-                  - !Sub 'arn:aws:s3:::${S3BucketScripts}/*'
-                  - !Sub 'arn:aws:s3:::${S3BucketData}/*'
-              - Effect: Allow
-                Action:
-                  - 'dynamodb:PutItem'
-                  - 'dynamodb:GetItem'
-                  - 'dynamodb:UpdateItem'
-                Resource: 
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}'
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}'
-
-  AcademySNSTopic:
-    Type: 'AWS::SNS::Topic'
-    Properties:
-      TopicName: !Ref SNSTopicName
-
-  SnsSubscription:
-    Type: 'AWS::SNS::Subscription'
-    Properties:
-      Protocol: 'email'
-      Endpoint: !Ref Email
-      TopicArn: !Ref AcademySNSTopic
+                  - s3:GetObject
+                  - s3:PutObject 
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !Sub arn:aws:s3:::${S3BucketScripts}/*
+                  - !Sub arn:aws:s3:::${S3BucketData}/*
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}
 
   StateMachineRole:
     Type: 'AWS::IAM::Role'
@@ -143,40 +134,52 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: 
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource: 
-                  - !Sub arn:aws:s3:::${S3BucketData}/*
-                  - !Sub arn:aws:s3:::${S3BucketScripts}/*
-              - Effect: Allow
                 Action:
-                  - dynamodb:PutItem
-                  - dynamodb:GetItem
-                Resource: 
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableGlobalName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: "*"
-              - Effect: Allow
-                Action:
+                  - dynamodb:Scan
+                  - lambda:InvokeFunction
                   - sns:Publish
                 Resource:
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableJobsName}
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}
                   - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${SNSTopicName}
+
+  StateMachineTriggerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Ref StateMachineTriggerRoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: StateMachineTriggerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'states:StartExecution'
+                Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
+
+  SnsSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      Protocol: 'email'
+      Endpoint: !Ref Email
+      TopicArn: !Ref AcademySNSTopic
 
   AcademyLambdaLanding:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: !Ref LambdaLandingName
-      Handler: index.lambda_handler
+      Handler: lambda_function.lambda_handler
       Role: !GetAtt LambdaLandingRole.Arn
       Code:
         S3Bucket: !Ref S3BucketScripts
-        S3Key: !Sub "lambda_${LambdaLandingUploadUNIXT}.zip"
+        S3Key: !Sub "fmaric-academy-lambda-cf-${LambdaLandingUploadUNIXT}.zip"
       Runtime: python3.9
       MemorySize: 1024
       Timeout: 900
@@ -198,78 +201,91 @@ Resources:
     Properties:
       StateMachineName: !Ref StateMachineName
       RoleArn: !GetAtt StateMachineRole.Arn
-      DefinitionString:
-        Fn::Sub: |
-          {
-            "Comment": "A description of my state machine",
-            "StartAt": "Scan",
-            "States": {
-              "Scan": {
-                "Type": "Task",
-                "Parameters": {
-                  "TableName": "${DynamoDBTableJobsName}"
-                },
-                "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
-                "Next": "Map"
+      DefinitionString: !Sub |
+        {
+          "StartAt": "Scan",
+          "States": {
+            "Scan": {
+              "Type": "Task",
+              "Parameters": {
+                "TableName": "${DynamoDBTableJobsName}"
               },
-              "Map": {
-                "Type": "Map",
-                "ItemProcessor": {
-                  "ProcessorConfig": {
-                    "Mode": "INLINE"
-                  },
-                  "StartAt": "GetAndUpdate",
-                  "States": {
-                    "GetAndUpdate": {
-                      "Type": "Task",
-                      "Resource": "arn:aws:states:::lambda:invoke",
-                      "OutputPath": "$.Payload",
-                      "Parameters": {
-                        "Payload.$": "$",
-                        "FunctionName": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaLandingName}:$LATEST"
-                      },
-                      "Retry": [
-                        {
-                          "ErrorEquals": [
-                            "Lambda.ServiceException",
-                            "Lambda.AWSLambdaException",
-                            "Lambda.SdkClientException",
-                            "Lambda.TooManyRequestsException"
-                          ],
-                          "IntervalSeconds": 1,
-                          "MaxAttempts": 3,
-                          "BackoffRate": 2
-                        }
-                      ],
-                      "End": true
-                    }
+              "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+              "Next": "Map",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "NotifyFailure"
+                }
+              ]
+            },
+            "Map": {
+              "Type": "Map",
+              "ItemsPath": "$.Items",
+              "Iterator": {
+                "StartAt": "AcademyLambdaLanding",
+                "States": {
+                  "AcademyLambdaLanding": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "${LambdaLandingName}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
                   }
-                },
-                "End": true,
-                "ItemsPath": "$.Items"
-              }
+                }
+              },
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "NotifyFailure"
+                }
+              ],
+              "End": true
+            },
+            "NotifyFailure": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "${AcademySNSTopic}",
+                "Message": "State machine execution failed."
+              },
+              "End": true
             }
           }
+        }
 
   AcademyStateMachineTrigger:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub ${StateMachineName}-Trigger
-      ScheduleExpression: cron(0 6 * * ? *)
+      ScheduleExpression: cron(0 4 * * ? *)
       State: 'ENABLED'
       Targets:
-        - Arn: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StateMachineName}'
-          Id: 'StateMachineTrigger'
-          RoleArn: !GetAtt StateMachineTriggerRoleName.Arn
-
-Conditions:
-  CreateSNSTopic: !Not [!Equals [!Ref SNSTopicName, '']]
+        - Arn: !GetAtt AcademyStateMachine.Arn
+          RoleArn: !GetAtt StateMachineTriggerRole.Arn
+          Id: "FmaricStateMachineTriggerTarget"
 
 Outputs:
   LambdaFunction:
     Value: !Ref AcademyLambdaLanding
   StateMachine:
     Value: !Ref AcademyStateMachine
-  SNSTopic:
-    Condition: CreateSNSTopic
+  SNSTopicArn:
+    Description: ARN of the SNS Topic
     Value: !Ref AcademySNSTopic
