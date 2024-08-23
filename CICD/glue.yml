@@ -127,7 +127,7 @@ Resources:
       Role: !Ref GlueJobRoleName
       Command:
         Name: glueetl
-        ScriptLocation: !Sub s3://${S3BucketScripts}/glu_script.py
+        ScriptLocation: !Sub s3://${S3BucketScripts}/glue.py
         PythonVersion: '3'
       DefaultArguments:
           "--TempDir": !Sub s3://${S3BucketData}/temp/
@@ -179,7 +179,3 @@ Resources:
         - CrawlerName: !Ref GlueCrawlerDatalakeName
       WorkflowName: !Ref GlueWorkflow
 
-# Outputs:
-#   WorkflowName:
-#     Description: Name of the Glue Workflow
-#     Value: !Ref GlueJobTriggerName
