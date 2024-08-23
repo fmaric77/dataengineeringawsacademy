@@ -292,3 +292,4 @@ Outputs:
   SNSTopicArn:
     Description: ARN of the SNS Topic
     Value: !Ref AcademySNSTopic
+    
