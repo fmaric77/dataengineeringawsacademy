@@ -1,0 +1,4 @@
+[
+  "Day4/day_4_tests.py::test_get_nobel_prizes_by_category",
+  "Day4/day_4_tests.py::test_get_nobel_prizes_by_year"
+]
