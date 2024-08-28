@@ -126,7 +126,7 @@ else:
 
 # Tokenize the dataset for CLM
 logging.info("Tokenizing the dataset for CLM")
-clm_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+clm_tokenizer = GPT2Tokenizer.from_pretrained('sshleifer/tiny-gpt2')
 
 # Add a padding token to the GPT-2 tokenizer
 clm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
@@ -147,7 +147,7 @@ clm_data_collator = DataCollatorForLanguageModeling(tokenizer=clm_tokenizer, mlm
 
 # Define the CLM model
 logging.info("Defining the CLM model")
-clm_model = GPT2LMHeadModel.from_pretrained('gpt2')
+clm_model = GPT2LMHeadModel.from_pretrained('sshleifer/tiny-gpt2')
 
 # Resize the model embeddings to match the tokenizer
 clm_model.resize_token_embeddings(len(clm_tokenizer))
@@ -183,7 +183,7 @@ if not os.path.exists('./clm_results') or not os.path.exists('./clm_results/conf
 else:
     logging.info("CLM model already exists. Loading the trained model.")
     clm_model = GPT2LMHeadModel.from_pretrained('./clm_results')
-    clm_tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+    clm_tokenizer = GPT2Tokenizer.from_pretrained('sshleifer/tiny-gpt2')
     clm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})  # Ensure padding token is added
     clm_model.resize_token_embeddings(len(clm_tokenizer))  # Resize embeddings
 
