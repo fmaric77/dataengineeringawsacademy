@@ -39,10 +39,13 @@ df = df.dropna(subset=['sentiment'])
 logging.info("Combining title and text columns into content")
 df['content'] = df['title'] + " " + df['text']
 
-# Select the first 2500 examples from each category
-logging.info("Selecting the first 2500 positive and negative samples")
-positive_samples = df[df['sentiment'] == 'positive'].head(2500)
-negative_samples = df[df['sentiment'] == 'negative'].head(2500)
+# Drop unnecessary columns
+df = df.drop(columns=['timestamp', 'source', 'category', 'url'])
+
+# Select 2500 random examples from each category
+logging.info("Selecting 2500 random positive and negative samples")
+positive_samples = df[df['sentiment'] == 'positive'].sample(n=2500, random_state=42)
+negative_samples = df[df['sentiment'] == 'negative'].sample(n=2500, random_state=42)
 
 # Combine and shuffle the dataset
 logging.info("Combining and shuffling the dataset")
@@ -86,7 +89,7 @@ mlm_training_args = TrainingArguments(
     output_dir='./mlm_results',
     overwrite_output_dir=True,
     num_train_epochs=3,
-    per_device_train_batch_size=32,  # Increased batch size
+    per_device_train_batch_size=16,  # Increased batch size
     save_steps=10_000,
     save_total_limit=2,
     fp16=False,  # Disable mixed precision training
@@ -158,7 +161,7 @@ clm_training_args = TrainingArguments(
     output_dir='./clm_results',
     overwrite_output_dir=True,
     num_train_epochs=3,
-    per_device_train_batch_size=32,  # Increased batch size
+    per_device_train_batch_size=16,  # Increased batch size
     save_steps=10_000,
     save_total_limit=2,
     fp16=False,  # Disable mixed precision training
@@ -200,9 +203,9 @@ clm_generator = pipeline('text-generation', model=clm_model, tokenizer=clm_token
 
 # Generate text
 logging.info("Generating text with MLM model")
-mlm_output = mlm_generator("My favourite fruits are:", max_length=50)
+mlm_output = mlm_generator("The best crypto is:", max_length=50)
 logging.info("Generating text with CLM model")
-clm_output = clm_generator("My favourite fruits are:", max_length=50)
+clm_output = clm_generator("The best crypto is:", max_length=50)
 
 logging.info(f"MLM Output: {mlm_output}")
 logging.info(f"CLM Output: {clm_output}")
