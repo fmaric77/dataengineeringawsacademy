@@ -89,11 +89,11 @@ mlm_training_args = TrainingArguments(
     output_dir='./mlm_results',
     overwrite_output_dir=True,
     num_train_epochs=3,
-    per_device_train_batch_size=16,  # Increased batch size
+    per_device_train_batch_size=16,  
     save_steps=10_000,
     save_total_limit=2,
-    fp16=False,  # Disable mixed precision training
-    gradient_accumulation_steps=2,  # Use gradient accumulation
+    fp16=False,  
+    gradient_accumulation_steps=2,  
 )
 
 # Helper function to make tensors contiguous
@@ -121,7 +121,7 @@ if not os.path.exists('./mlm_results') or not os.path.exists('./mlm_results/conf
     )
     mlm_trainer.train()
     logging.info("Saving the trained MLM model")
-    mlm_trainer.save_model('./mlm_results')  # Save the model after training
+    mlm_trainer.save_model('./mlm_results')  
 else:
     logging.info("MLM model already exists. Loading the trained model.")
     mlm_model = BertForMaskedLM.from_pretrained('./mlm_results')
@@ -161,11 +161,11 @@ clm_training_args = TrainingArguments(
     output_dir='./clm_results',
     overwrite_output_dir=True,
     num_train_epochs=3,
-    per_device_train_batch_size=16,  # Increased batch size
+    per_device_train_batch_size=16,  
     save_steps=10_000,
     save_total_limit=2,
-    fp16=False,  # Disable mixed precision training
-    gradient_accumulation_steps=2,  # Use gradient accumulation
+    fp16=False,  
+    gradient_accumulation_steps=2,  
 )
 
 # Check if CLM model already exists and is valid
