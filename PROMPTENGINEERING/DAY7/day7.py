@@ -104,9 +104,13 @@ def fetch_crypto_news(crypto_symbol: str) -> str:
     """Fetch the latest news about a cryptocurrency."""
     news_hits = retrieve_news(crypto_symbol)
     if news_hits:
+        seen_titles = set()
         news_summary = f"According to the latest news about {crypto_symbol}:\n"
         for hit in news_hits:
-            news_summary += f"- {hit['_source']['title']}: {hit['_source']['text']}\n"
+            title = hit['_source']['title']
+            if title not in seen_titles:
+                seen_titles.add(title)
+                news_summary += f"- {title}: {hit['_source']['text']}\n"
         return news_summary
     return f"No recent news found for {crypto_symbol}."
 
