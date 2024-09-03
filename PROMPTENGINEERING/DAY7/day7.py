@@ -62,10 +62,8 @@ def retrieve_news(query_text):
                                     "k": 5
                                 }
                             }
-                        },
-                        "filter": {
-                            "term": {"sentiment": "positive"}
                         }
+                  
                     }
                 }
             }
