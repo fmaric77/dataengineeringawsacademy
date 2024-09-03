@@ -9,6 +9,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.tools import tool
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+
+
+
 # Global API key
 API_KEY = "113c5d6f3c5b5365e1ae5e63039150abe56f0ec4cde2002798000cdcc0d67c23"
 
@@ -63,15 +68,12 @@ def retrieve_news(query_text):
                                 }
                             }
                         }
-                  
                     }
                 }
             }
         )
         return results['hits']['hits']
     return []
-
-
 
 # Define tools
 @tool
@@ -124,26 +126,20 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}")
 ])
+memory = ChatMessageHistory()
 
 tools = [fetch_current_price, convert_price, fetch_historical_prices, fetch_crypto_news]
 agent = create_tool_calling_agent(chat_model, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+with_message_history = RunnableWithMessageHistory(agent_executor, lambda x: memory, input_messages_key="input")
 
 # Chatbot main loop
 def handle_user_input(user_input):
     try:
-        response = agent_executor.invoke({"input": user_input})
+        response = with_message_history.invoke({"input": user_input},config={"configurable": {"session_id": "stringx"}})
         print(response)
     except Exception as e:
         print(f"An error occurred: {e}")
-
-print("Chatbot is running. Type 'END' to terminate.")
-while True:
-    user_input = input("User: ")
-    if user_input == "END":
-        print("Ending conversation. Goodbye!")
-        break
-    handle_user_input(user_input)
 
 print("Chatbot is running. Type 'END' to terminate.")
 while True:
