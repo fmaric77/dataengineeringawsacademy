@@ -12,6 +12,9 @@ import logging
 import pandas as pd
 from prophet import Prophet
 from langchain.tools import tool
+import pandas as pd
+import requests
+import matplotlib.pyplot as plt
 # Configure logging to suppress specific warnings
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('Thread').setLevel(logging.ERROR)
@@ -67,6 +70,32 @@ def fetch_historical_prices(crypto_symbol: str) -> dict:
     response = requests.get(url, headers={"authorization": f"Apikey {API_KEY}"})
     data = response.json()
     prices = {day['time']: day['close'] for day in data['Data']['Data']}
+    return prices
+
+@tool
+def fetch_graphical_historical_prices(crypto_symbol: str) -> dict:
+    """Fetch historical prices of a cryptocurrency for each month since its inception and display a graph."""
+    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={crypto_symbol}&tsym=USD&limit=2000&aggregate=30"
+    response = requests.get(url, headers={"authorization": f"Apikey {API_KEY}"})
+    data = response.json()
+    prices = {day['time']: day['close'] for day in data['Data']['Data']}
+    
+    # Convert timestamps to readable dates
+    dates = [datetime.fromtimestamp(ts) for ts in prices.keys()]
+    values = list(prices.values())
+    
+    # Plot the data
+    plt.figure(figsize=(10, 5))
+    plt.plot(dates, values, label=f'{crypto_symbol} Price')
+    plt.xlabel('Date')
+    plt.ylabel('Price (USD)')
+    plt.title(f'Historical Prices of {crypto_symbol}')
+    plt.legend()
+    plt.grid(True)
+    
+    # Display the plot using Streamlit
+    st.pyplot(plt)
+    
     return prices
 
 # Global stop event for live graph
@@ -227,3 +256,70 @@ def predict_future_prices(crypto_symbol: str) -> str:
 #             st.error(f"An error occurred: {e}")
 
 #     return "Simulation ended."
+
+@tool
+def export_trade_log_to_excel(filename: str):
+    """Export the trade log to an Excel spreadsheet."""
+    if 'trade_log' in st.session_state and st.session_state.trade_log:
+        trade_log_df = pd.DataFrame(st.session_state.trade_log)
+        trade_log_df.to_excel(filename, index=False)
+        return f"Trade log exported to {filename}"
+    else:
+        return "No trade log available to export."
+    
+
+@tool
+def read_trade_log_and_display_statistics(filename: str):
+    """Read the trade log from an Excel spreadsheet and display statistics."""
+    try:
+        # Read the Excel file into a DataFrame
+        trade_log_df = pd.read_excel(filename)
+        
+        # Calculate statistics
+        total_trades = len(trade_log_df)
+        total_profit = trade_log_df['Profit'].sum()
+        average_profit_per_trade = trade_log_df['Profit'].mean()
+        max_profit = trade_log_df['Profit'].max()
+        min_profit = trade_log_df['Profit'].min()
+        
+        # Calculate loss rate
+        loss_trades = trade_log_df[trade_log_df['Profit'] < 0]
+        loss_rate = len(loss_trades) / total_trades * 100 if total_trades > 0 else 0
+        
+        # Display statistics using Streamlit
+        st.write(f"**Trade Log Statistics for {filename}:**")
+        st.write(f"Total Trades: {total_trades}")
+        st.write(f"Total Profit: {total_profit:.2f} USD")
+        st.write(f"Average Profit per Trade: {average_profit_per_trade:.2f} USD")
+        st.write(f"Maximum Profit: {max_profit:.2f} USD")
+        st.write(f"Minimum Profit: {min_profit:.2f} USD")
+        st.write(f"Loss Rate: {loss_rate:.2f}%")
+        
+        # Plot the profits and losses
+        plt.figure(figsize=(10, 5))
+        plt.bar(trade_log_df.index, trade_log_df['Profit'], color=['red' if x < 0 else 'green' for x in trade_log_df['Profit']])
+        plt.xlabel('Trade Number')
+        plt.ylabel('Profit (USD)')
+        plt.title('Profit and Loss per Trade')
+        plt.axhline(0, color='black', linewidth=0.5)
+        plt.grid(True)
+        
+        # Display the plot using Streamlit
+        st.pyplot(plt)
+        
+        # Save the DataFrame to an Excel file named 'cryptolog.xlsx'
+        output_filename = 'cryptolog.xlsx'
+        trade_log_df.to_excel(output_filename, index=False)
+        st.write(f"Trade log has been saved to {output_filename}")
+        
+        return {
+            "Total Trades": total_trades,
+            "Total Profit": total_profit,
+            "Average Profit per Trade": average_profit_per_trade,
+            "Maximum Profit": max_profit,
+            "Minimum Profit": min_profit,
+            "Loss Rate": loss_rate
+        }
+    except Exception as e:
+        st.error(f"An error occurred while reading the trade log: {e}")
+        return {"error": str(e)}
