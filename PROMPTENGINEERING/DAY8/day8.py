@@ -40,7 +40,7 @@ if 'buy_price' not in st.session_state:
 # Define the simulate_crypto_trading tool
 @tool
 def simulate_crypto_trading(crypto_symbol: str):
-    """Simulate crypto trading with advice from the chatbot. DO NOT CALL PREDICT_FUTURE_PRICES, LOAD_LIVE_GRAPH, DO NOT CALL fetch_graphical_historical_prices IN THIS FUNCTION """
+    """Simulate crypto trading with advice from the chatbot. DO NOT CALL PREDICT_FUTURE_PRICES, LOAD_LIVE_GRAPH IN THIS FUNCTION """
     # Prepare trade log for the chatbot
     if not st.session_state.trade_log:
         trade_log_str = "No previous trades."
@@ -126,7 +126,7 @@ def simulate_crypto_trading(crypto_symbol: str):
 
 # Bind tools to model
 chat_model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-chat_model = ChatBedrock(model_id=chat_model_id).bind_tools([fetch_current_price, fetch_historical_prices, simulate_crypto_trading, load_live_graph,predict_future_prices,fetch_graphical_historical_prices])
+chat_model = ChatBedrock(model_id=chat_model_id).bind_tools([fetch_current_price, fetch_historical_prices, simulate_crypto_trading, load_live_graph,predict_future_prices])
 
 # Create agent
 prompt = ChatPromptTemplate.from_messages([
@@ -136,7 +136,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 memory = ChatMessageHistory()
 
-tools = [simulate_crypto_trading,fetch_current_price, fetch_historical_prices, load_live_graph,predict_future_prices,fetch_graphical_historical_prices]
+tools = [simulate_crypto_trading,fetch_current_price, fetch_historical_prices, load_live_graph,predict_future_prices]
 agent = create_tool_calling_agent(chat_model, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 with_message_history = RunnableWithMessageHistory(agent_executor, lambda x: memory, input_messages_key="input")
