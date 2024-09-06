@@ -10,10 +10,8 @@ class ConfigurableDataHubFmaricStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Retrieve the environment context variable
         env = self.node.try_get_context('env')
 
-        # Define resource configurations based on the environment
         if env == 'dev':
             dynamo_read_capacity = 1
             dynamo_write_capacity = 1
@@ -25,7 +23,6 @@ class ConfigurableDataHubFmaricStack(Stack):
         else:
             raise ValueError("Invalid environment. Use 'dev' or 'test'.")
 
-        # Create the DynamoDB table
         table = dynamodb.Table(self, "ArtifactsTableFmaric",
             partition_key=dynamodb.Attribute(name="id", type=dynamodb.AttributeType.STRING),
             read_capacity=dynamo_read_capacity,
@@ -33,7 +30,6 @@ class ConfigurableDataHubFmaricStack(Stack):
             stream=dynamodb.StreamViewType.NEW_IMAGE
         )
 
-        # Create the Lambda function
         lambda_function = _lambda.Function(self, "ArtifactsProcessorFmaric",
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler="lambda_function.handler",
@@ -44,10 +40,8 @@ class ConfigurableDataHubFmaricStack(Stack):
             }
         )
 
-        # Grant the Lambda function read/write permissions to the DynamoDB table
         table.grant_read_write_data(lambda_function)
 
-        # Create an event source mapping for the Lambda function to be triggered by DynamoDB Streams
         lambda_function.add_event_source(event_sources.DynamoEventSource(table,
             starting_position=_lambda.StartingPosition.TRIM_HORIZON,
             batch_size=5,

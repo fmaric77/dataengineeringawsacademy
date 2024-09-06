@@ -12,10 +12,8 @@ class ProcessingStack(Stack):
     def __init__(self, scope: Construct, id: str, ingestion_stack: Stack, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Reference the S3 bucket from the Ingestion Stack
         data_ingestion_bucket = ingestion_stack.data_ingestion_bucket
 
-        # Create an IAM role for the Glue job
         glue_role = iam.Role(self, "GlueJobRole",
             assumed_by=iam.ServicePrincipal("glue.amazonaws.com"),
             managed_policies=[
@@ -23,24 +21,21 @@ class ProcessingStack(Stack):
             ]
         )
 
-        # Grant the Glue job role read access to the S3 bucket
         data_ingestion_bucket.grant_read(glue_role)
 
-        # Create the Glue job
         glue_job = glue.CfnJob(self, "DataAlchemistsJob",
             role=glue_role.role_arn,
             command=glue.CfnJob.JobCommandProperty(
                 name="pythonshell",
-                script_location="s3://path-to-your-script/glue_script.py",
+                script_location="s3://fmaric-bucket-cdk/glue_script.py",
                 python_version="3"
             ),
             default_arguments={
-                "--extra-py-files": "s3://path-to-your-script/dependencies.zip"
+                "--extra-py-files": "s3://fmaric-bucket-cdk/dependencies.zip"
             },
             max_retries=1
         )
 
-        # Create a CloudWatch alarm for the Glue job
         cloudwatch.Alarm(self, "GlueJobFailureAlarm",
             metric=cloudwatch.Metric(
                 namespace="Glue",

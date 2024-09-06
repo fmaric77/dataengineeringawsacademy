@@ -10,7 +10,6 @@ class IngestionStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Create the S3 bucket
         self.data_ingestion_bucket = s3.Bucket(self, "DataIngestionVault",
             versioned=True,
             removal_policy=RemovalPolicy.DESTROY

@@ -12,11 +12,10 @@ class OperationSecureVaultFmaricStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Phase 1: Create an S3 bucket
         self.bucket = s3.Bucket(self, "SecureVaultBucketFmaric",
-            versioned=True,  # Phase 2: Enable versioning
-            encryption=s3.BucketEncryption.S3_MANAGED,  # Phase 3: Add server-side encryption
-            lifecycle_rules=[  # Phase 4: Implement lifecycle rules
+            versioned=True, 
+            encryption=s3.BucketEncryption.S3_MANAGED,  
+            lifecycle_rules=[  
                 s3.LifecycleRule(
                     id="TransitionToIAFmaric",
                     transitions=[
@@ -31,10 +30,10 @@ class OperationSecureVaultFmaricStack(Stack):
                     noncurrent_version_expiration=Duration.days(365)
                 )
             ],
-            removal_policy=RemovalPolicy.DESTROY  # Phase 6: Resource removal policy
+            removal_policy=RemovalPolicy.DESTROY 
         )
 
-        # Phase 5: Restrict access to the stack deployer
+
         self.bucket.add_to_resource_policy(
             iam.PolicyStatement(
                 actions=["s3:*"],
