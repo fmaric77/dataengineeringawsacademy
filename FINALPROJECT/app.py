@@ -7,10 +7,11 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from weathertools import get_current_weather, get_weather_forecast
+from wikipediatools import get_city_highlights
 
 # Bind tools to model
 chat_model_id = "anthropic.claude-3-haiku-20240307-v1:0"
-chat_model = ChatBedrock(model_id=chat_model_id).bind_tools([get_current_weather, get_weather_forecast])
+chat_model = ChatBedrock(model_id=chat_model_id).bind_tools([get_current_weather, get_weather_forecast, get_city_highlights])
 
 # Create agent with prompt template
 prompt = ChatPromptTemplate.from_messages([
@@ -23,7 +24,7 @@ prompt = ChatPromptTemplate.from_messages([
 memory = ChatMessageHistory()
 
 # Define tools
-tools = [get_current_weather, get_weather_forecast]
+tools = [get_current_weather, get_weather_forecast, get_city_highlights]
 
 # Create agent and executor
 agent = create_tool_calling_agent(chat_model, tools, prompt)
